@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Confirmation #{{ booking.reference }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0"><i class="bi bi-check-circle-fill"></i> Booking Confirmation: {{ booking.reference }}</h3>
+        </div>
+        <div class="card-body">
+            <!-- Flight Details Section -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h4 class="border-bottom pb-2"><i class="bi bi-airplane"></i> Flight Details</h4>
+                    <div class="row">
+                        <div class="col-4 text-end fw-bold">Flight:</div>
+                        <div class="col-8">{{ booking.flight.airline.name }} ({{ booking.flight.airline.code }}{{ booking.flight.flight_number }})</div>
+                        
+                        <div class="col-4 text-end fw-bold">Class:</div>
+                        <div class="col-8">{{ booking.get_travel_class_display }}</div>
+                        
+                        <div class="col-4 text-end fw-bold">Duration:</div>
+                        <div class="col-8">{{ booking.flight.duration_display }} hours</div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <h4 class="border-bottom pb-2"><i class="bi bi-calendar-event"></i> Booking Information</h4>
+                    <div class="row">
+                        <div class="col-4 text-end fw-bold">Status:</div>
+                        <div class="col-8">
+                            <span class="badge bg-{% if booking.status == 'CONFIRMED' %}success{% else %}danger{% endif %}">
+                                {{ booking.get_status_display }}
+                            </span>
+                        </div>
+                        
+                        <div class="col-4 text-end fw-bold">Date:</div>
+                        <div class="col-8">{{ booking.booking_date|date:"M j, Y H:i" }}</div>
+                        
+                        <div class="col-4 text-end fw-bold">Passengers:</div>
+                        <div class="col-8">{{ passengers|length }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Airport Details Section -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-light">
+                            <h5><i class="bi bi-geo-alt-fill"></i> Departure</h5>
+                        </div>
+                        <div class="card-body">
+                            <h5>{{ booking.flight.departure_airport.city }} ({{ booking.flight.departure_airport.code }})</h5>
+                            <p class="mb-1">{{ booking.flight.departure_airport.name }}</p>
+                            <p class="mb-1">{{ booking.flight.departure_airport.country }}</p>
+                            <p class="mb-0 text-muted">
+                                <strong>Time:</strong> {{ booking.flight.departure_time|date:"M j, Y H:i" }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-light">
+                            <h5><i class="bi bi-geo-fill"></i> Arrival</h5>
+                        </div>
+                        <div class="card-body">
+                            <h5>{{ booking.flight.arrival_airport.city }} ({{ booking.flight.arrival_airport.code }})</h5>
+                            <p class="mb-1">{{ booking.flight.arrival_airport.name }}</p>
+                            <p class="mb-1">{{ booking.flight.arrival_airport.country }}</p>
+                            <p class="mb-0 text-muted">
+                                <strong>Time:</strong> {{ booking.flight.arrival_time|date:"M j, Y H:i" }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Passengers Information Section -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5>Passenger Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for passenger in passengers %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6>Passenger {{ forloop.counter }}</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Name:</strong> {{ passenger.first_name }} {{ passenger.last_name }}</p>
+                                    <p><strong>Date of Birth:</strong> {{ passenger.date_of_birth|date:"M d, Y" }}</p>
+                                    <p><strong>ID Type:</strong> {{ passenger.get_id_type_display }}</p>
+                                    <p><strong>ID Number:</strong> {{ passenger.id_number }}</p>
+                                    {% if passenger.passport_number %}
+                                    <p><strong>Passport:</strong> {{ passenger.passport_number }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Payment Information Section -->
+            {% if payment %}
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5><i class="bi bi-credit-card-fill"></i> Payment Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Payment Date:</strong> {{ payment.payment_date|date:"M j, Y H:i" }}</p>
+                            <p class="mb-2"><strong>Transaction ID:</strong> <code>{{ payment.transaction_id }}</code></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Payment Method:</strong> Credit Card</p>
+                            <p class="mb-2"><strong>Amount Paid:</strong> ${{ booking.total_price }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Actions Section -->
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                <a href="{% url 'my_bookings' %}" class="btn btn-outline-secondary me-md-2">
+                    <i class="bi bi-list-ul"></i> View All Bookings
+                </a>
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="bi bi-printer"></i> Print Confirmation
+                </button>
+                {% if booking.status == 'CONFIRMED' %}
+                <a href="{% url 'cancel_booking' booking.reference %}" class="btn btn-outline-danger ms-md-2">
+                    <i class="bi bi-x-circle"></i> Cancel Booking
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

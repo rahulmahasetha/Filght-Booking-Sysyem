@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block body %}
+<style>
+  .hero-section {
+    background: url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') no-repeat center center;
+    background-size: cover;
+    height: 85vh;
+    position: relative;
+  }
+  .hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+  .flight-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  .flight-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+  }
+  .destination-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+  }
+  .partner-logo {
+    filter: grayscale(100%);
+    opacity: 0.7;
+    transition: all 0.3s ease;
+  }
+  .partner-logo:hover {
+    filter: grayscale(0);
+    opacity: 1;
+  }
+</style>
+
+<div class="hero-section">
+  <div class="hero-overlay d-flex align-items-center">
+    <div class="container text-white text-center">
+      <h1 class="display-4 fw-bold mb-3">Book Your Dream Vacation</h1>
+      <p class="lead mb-4">Find the best flight deals to your favorite destinations</p>
+      <a href="{% url 'flight_search' %}" class="btn btn-primary btn-lg px-4 py-2">Search Flights</a>
+    </div>
+  </div>
+</div>
+
+<!-- Popular Destinations Section -->
+<div class="container my-5 py-4">
+  <h2 class="text-center mb-5">Popular Destinations</h2>
+  <div class="row">
+    <!-- Paris -->
+    <div class="col-lg-3 col-md-6 mb-4">
+      <div class="card flight-card h-100">
+        <div class="position-relative">
+          <img src="https://images.unsplash.com/photo-1431274172761-fca41d930114?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" class="card-img-top" alt="Paris" style="height: 180px; object-fit: cover;">
+          <span class="destination-badge">42 flights/week</span>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">Paris</h5>
+          <p class="card-text text-muted">France</p>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-primary fw-bold">From $399</span>
+            <a href="{% url 'flight_search' %}?destination=CDG&destination_name=Paris" class="btn btn-sm btn-outline-primary">View Flights</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tokyo -->
+    <div class="col-lg-3 col-md-6 mb-4">
+      <div class="card flight-card h-100">
+        <div class="position-relative">
+          <img src="https://images.unsplash.com/photo-1492571350019-22de08371fd3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" class="card-img-top" alt="Tokyo" style="height: 180px; object-fit: cover;">
+          <span class="destination-badge">28 flights/week</span>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">Tokyo</h5>
+          <p class="card-text text-muted">Japan</p>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-primary fw-bold">From $799</span>
+            <a href="{% url 'flight_search' %}?destination=HND&destination_name=Tokyo" class="btn btn-sm btn-outline-primary">View Flights</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- New York -->
+    <div class="col-lg-3 col-md-6 mb-4">
+      <div class="card flight-card h-100">
+        <div class="position-relative">
+          <img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" class="card-img-top" alt="New York" style="height: 180px; object-fit: cover;">
+          <span class="destination-badge">56 flights/week</span>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">New York</h5>
+          <p class="card-text text-muted">USA</p>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-primary fw-bold">From $299</span>
+            <a href="{% url 'flight_search' %}?destination=JFK&destination_name=New+York" class="btn btn-sm btn-outline-primary">View Flights</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dubai -->
+    <div class="col-lg-3 col-md-6 mb-4">
+      <div class="card flight-card h-100">
+        <div class="position-relative">
+          <img src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" class="card-img-top" alt="Dubai" style="height: 180px; object-fit: cover;">
+          <span class="destination-badge">35 flights/week</span>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">Dubai</h5>
+          <p class="card-text text-muted">UAE</p>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-primary fw-bold">From $499</span>
+            <a href="{% url 'flight_search' %}?destination=DXB&destination_name=Dubai" class="btn btn-sm btn-outline-primary">View Flights</a>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+    
+     <!-- Nepal (Kathmandu) -->
+     <div class="col-lg-3 col-md-6 mb-4">
+      <div class="card flight-card h-100">
+        <div class="position-relative">
+          <img src="https://assets.vogue.in/photos/5ce431b2f55c27562ea27f1a/16:9/w_1280,c_limit/featured.2.jpg" class="card-img-top" alt="Kathmandu" style="height: 180px; object-fit: cover;">
+          <span class="destination-badge">18 flights/week</span>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">Kathmandu</h5>
+          <p class="card-text text-muted">Nepal</p>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-primary fw-bold">From $549</span>
+            <a href="{% url 'flight_search' %}?destination=KTM&destination_name=Kathmandu" class="btn btn-sm btn-outline-primary">View Flights</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- India (Delhi) -->
+    <div class="col-lg-3 col-md-6 mb-4">
+      <div class="card flight-card h-100">
+        <div class="position-relative">
+          <img src="https://images.unsplash.com/photo-1587474260584-136574528ed5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" class="card-img-top" alt="Delhi" style="height: 180px; object-fit: cover;">
+          <span class="destination-badge">32 flights/week</span>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">Delhi</h5>
+          <p class="card-text text-muted">India</p>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-primary fw-bold">From $449</span>
+            <a href="{% url 'flight_search' %}?destination=DEL&destination_name=Delhi" class="btn btn-sm btn-outline-primary">View Flights</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- India (Manali) -->
+<div class="col-lg-3 col-md-6 mb-4">
+  <div class="card flight-card h-100">
+    <div class="position-relative">
+      <img src="https://www.justahotels.com/wp-content/uploads/2023/10/Places-To-Visit-in-Manali.jpg" class="card-img-top" alt="Manali" style="height: 180px; object-fit: cover;">
+      <span class="destination-badge">10 flights/week</span>
+    </div>
+    <div class="card-body">
+      <h5 class="card-title">Manali</h5>
+      <p class="card-text text-muted">India</p>
+      <div class="d-flex justify-content-between align-items-center">
+        <span class="text-primary fw-bold">From $259</span>
+        <a href="{% url 'flight_search' %}?destination=MAN&destination_name=Manali" class="btn btn-sm btn-outline-primary">View Flights</a>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- India (Darjeeling) -->
+<div class="col-lg-3 col-md-6 mb-4">
+  <div class="card flight-card h-100">
+    <div class="position-relative">
+      <img src="https://th.bing.com/th/id/OIP.r-WibE0AXV2scLnggBwkmwHaEK?rs=1&pid=ImgDetMain" class="card-img-top" alt="Darjeeling" style="height: 180px; object-fit: cover;">
+      <span class="destination-badge">12 flights/week</span>
+    </div>
+    <div class="card-body">
+      <h5 class="card-title">Darjeeling</h5>
+      <p class="card-text text-muted">India</p>
+      <div class="d-flex justify-content-between align-items-center">
+        <span class="text-primary fw-bold">From $299</span>
+        <a href="{% url 'flight_search' %}?destination=DAJ&destination_name=Darjeeling" class="btn btn-sm btn-outline-primary">View Flights</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+  </div>
+</div>
+
+<!-- Airlines Partners Section -->
+<div class="bg-light py-5">
+  <div class="container">
+    <h2 class="text-center mb-5">Our Airline Partners</h2>
+    <div class="row justify-content-center align-items-center text-center g-4">
+      <!-- Nepal Airlines -->
+      <div class="col-lg-2 col-md-3 col-4">
+        <img src="https://vectorseek.com/wp-content/uploads/2023/09/Nepal-airlines-Logo-Vector.svg-.png" alt="Nepal Airlines" class="img-fluid" style="max-height: 60px;">
+        <p class="small mt-2 mb-0 text-muted">Nepal Airlines</p>
+      </div>
+
+      <!-- Air India -->
+      <div class="col-lg-2 col-md-3 col-4">
+        <img src="https://www.liblogo.com/img-logo/ai4766i6c7-air-india-logo-indian-airlines-logo-and-symbol-meaning-history-png-airline.png" alt="Air India" class="img-fluid" style="max-height: 60px;">
+        <p class="small mt-2 mb-0 text-muted">Air India</p>
+      </div>
+
+      <!-- IndiGo -->
+      <div class="col-lg-2 col-md-3 col-4">
+        <img src="https://flywith.virginatlantic.com/content/dam/HelpCentre/partner-airlines/logos/indigo%20logo.png" alt="IndiGo" class="img-fluid" style="max-height: 60px;">
+        <p class="small mt-2 mb-0 text-muted">IndiGo</p>
+      </div>
+
+      <!-- Delta Airlines -->
+      <div class="col-lg-2 col-md-3 col-4">
+        <img src="https://logos-world.net/wp-content/uploads/2021/08/Delta-Air-Lines-First-era-Logo-1934-1951.png" alt="Delta Airlines" class="img-fluid" style="max-height: 60px;">
+        <p class="small mt-2 mb-0 text-muted">Delta Airlines</p>
+      </div>
+
+      <!-- Emirates -->
+      <div class="col-lg-2 col-md-3 col-4">
+        <img src="https://pluspng.com/img-png/emirates-airlines-logo-png-qatar-airways-logo-png-img-567-567-free-transparent-logo-900x580.jpg" alt="Emirates" class="img-fluid" style="max-height: 60px;">
+        <p class="small mt-2 mb-0 text-muted">Emirates</p>
+      </div>
+
+      <!-- Singapore Airlines -->
+      <div class="col-lg-2 col-md-3 col-4">
+        <img src="https://th.bing.com/th/id/R.a77744b7790fcbf403eda04247d2d5d3?rik=i43Q59VL7ys3AQ&riu=http%3a%2f%2fdwglogo.com%2fwp-content%2fuploads%2f2016%2f08%2fSingapore_Airlines_logo-02.png&ehk=ONBpnWvZSdloI5gEkYZoVPxgRbYbETChVLGckXU77kI%3d&risl=&pid=ImgRaw&r=0" alt="Singapore Airlines" class="img-fluid" style="max-height: 60px;">
+        <p class="small mt-2 mb-0 text-muted">Singapore Airlines</p>
+      </div>
+
+      <!-- Qatar Airways -->
+      <div class="col-lg-2 col-md-3 col-4">
+        <img src="https://download.logo.wine/logo/Qatar_Airways/Qatar_Airways-Logo.wine.png" alt="Qatar Airways" class="img-fluid" style="max-height: 60px;">
+        <p class="small mt-2 mb-0 text-muted">Qatar Airways</p>
+      </div>
+
+      <!-- Lufthansa -->
+      <div class="col-lg-2 col-md-3 col-4">
+        <img src="https://loghi-famosi.com/wp-content/uploads/2021/01/Lufthansa-Simbolo.png" alt="Lufthansa" class="img-fluid" style="max-height: 60px;">
+        <p class="small mt-2 mb-0 text-muted">Lufthansa</p>
+      </div>
+
+      <!-- British Airways -->
+      <div class="col-lg-2 col-md-3 col-4">
+        <img src="https://cdn.1min30.com/wp-content/uploads/2018/07/British-Airways-embleme.jpg" alt="British Airways" class="img-fluid" style="max-height: 60px;">
+        <p class="small mt-2 mb-0 text-muted">British Airways</p>
+      </div>
+    </div>
+
+    <div class="text-center mt-5">
+      <a href="#" class="btn btn-outline-secondary">View All Partners</a>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}

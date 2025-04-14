@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Cancel Booking #{{ booking.reference }}{% endblock %}
+
+{% block body %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Cancel Booking #{{ booking.reference }}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h4 class="alert-heading">Are you sure you want to cancel this booking?</h4>
+                        <p class="mb-0">This action cannot be undone. Any seats reserved will be released back to inventory.</p>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Booking Details</h5>
+                        </div>
+                        <div class="card-body">
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Flight:</strong> {{ booking.flight.airline.code }}{{ booking.flight.flight_number }}</p>
+                                    <p><strong>From:</strong> {{ booking.flight.departure_airport.city }} ({{ booking.flight.departure_airport.code }})</p>
+                                    <p><strong>To:</strong> {{ booking.flight.arrival_airport.city }} ({{ booking.flight.arrival_airport.code }})</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Departure:</strong> {{ booking.flight.departure_time|date:"M j, Y H:i" }}</p>
+                                    {% for passenger in passengers %}
+                                    <p><strong>Passenger:</strong> {{ passenger.first_name }} {{ passenger.last_name }}</p>
+                                {% endfor %}
+                                    <p><strong>Class:</strong> 
+                                        <span class="badge bg-{% if booking.travel_class == 'ECONOMY' %}primary{% elif booking.travel_class == 'BUSINESS' %}warning{% else %}dark{% endif %}">
+                                            {{ booking.travel_class }}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Refund Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>Total Paid:</th>
+                                    <td>${{ booking.total_price }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Refund Amount:</th>
+                                    <td class="fw-bold">${{ booking.total_price }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Refund Method:</th>
+                                    <td>Original payment method</td>
+                                </tr>
+                                <tr>
+                                    <th>Processing Time:</th>
+                                    <td>5-7 business days</td>
+                                </tr>
+                            </table>
+                            <small class="text-muted">* Refund amount and processing time may vary based on payment method and bank policies.</small>
+                        </div>
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="cancel_reason" class="form-label">Reason for cancellation (optional):</label>
+                            <select class="form-select" id="cancel_reason" name="cancel_reason">
+                                <option value="">Select a reason...</option>
+                                <option value="change_plans">Change of plans</option>
+                                <option value="found_cheaper">Found a better price</option>
+                                <option value="travel_dates">Changed travel dates</option>
+                                <option value="other">Other reason</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="comments" class="form-label">Additional comments:</label>
+                            <textarea class="form-control" id="comments" name="comments" rows="3"></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'booking_detail' booking.reference %}" class="btn btn-outline-secondary me-md-2">
+                                <i class="bi bi-arrow-left"></i> Back to Booking
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-x-circle"></i> Confirm Cancellation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .card {
+        border: none;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .card-header {
+        border-bottom: 1px solid rgba(0,0,0,.125);
+    }
+</style>
+{% endblock %}

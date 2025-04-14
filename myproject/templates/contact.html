@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Contact{% endblock %}
+
+{% block body %}
+<style>
+  .contact-container {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+  
+  .contact-image-container {
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  }
+  
+  .form-control:focus {
+    border-color: #6c8ae4;
+    box-shadow: 0 0 0 0.25rem rgba(108, 138, 228, 0.25);
+  }
+</style>
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+      <div class="contact-container">
+        <h1 class="text-center mb-4" style="color: #2c3e50;">Contact Us</h1>
+
+        <!-- Contact image with improved container -->
+        <div class="contact-image-container text-center mb-4">
+          <img src="https://wallpaperaccess.com/full/254381.jpg" 
+               alt="Contact Us" 
+               class="img-fluid rounded-3" 
+               style="max-height: 250px; object-fit: cover; width: 100%; border: 2px solid #e9ecef;">
+        </div>
+
+        <form method="post" action="/contact" class="px-3">
+          {% csrf_token %}
+
+          <div class="mb-4">
+            <label for="name" class="form-label fw-semibold" style="color: #34495e;">
+              Full Name <span class="text-danger">*</span>
+            </label>
+            <input type="text" class="form-control py-2" id="name" name="name" placeholder="Your Name" required>
+          </div>
+
+          <div class="mb-4">
+            <label for="email" class="form-label fw-semibold" style="color: #34495e;">
+              Email Address <span class="text-danger">*</span>
+            </label>
+            <input type="email" class="form-control py-2" id="email" name="email" placeholder="name@example.com" required>
+          </div>
+
+          <div class="mb-4">
+            <label for="phone" class="form-label fw-semibold" style="color: #34495e;">
+              Phone Number <span class="text-danger">*</span>
+            </label>
+            <input type="tel" class="form-control py-2" id="phone" name="phone" placeholder="Phone Number" required>
+          </div>
+
+          <div class="mb-4">
+            <label for="pincode" class="form-label fw-semibold" style="color: #34495e;">
+              Pincode/Zip Code <span class="text-danger">*</span>
+            </label>
+            <input type="text" class="form-control py-2" id="pincode" name="pincode" placeholder="Enter your pincode" required 
+                   pattern="[0-9]{5,6}" title="Please enter a valid 5 or 6 digit pincode">
+          </div>
+
+          <div class="mb-4">
+            <label for="message" class="form-label fw-semibold" style="color: #34495e;">
+              Message <span class="text-danger">*</span>
+            </label>
+            <textarea class="form-control py-2" id="message" name="message" rows="5" placeholder="Your message..." required></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" style="background-color: #4a6bdf; border: none; font-size: 1.05rem;">
+            Submit Message
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock body %}

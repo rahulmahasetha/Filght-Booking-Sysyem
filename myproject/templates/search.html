@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Flight Search{% endblock %}
+
+{% block body %}
+{% load static %}
+
+<div class="container my-5">
+  <div class="card">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">Find Your Flight</h4>
+    </div>
+    <div class="card-body">
+      <form method="POST">
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label for="departure" class="form-label">From</label>
+            <select class="form-select" id="departure" name="departure" required>
+              <option value="">Select airport</option>
+              {% for airport in airports %}
+                <option value="{{ airport.id }}">{{ airport.city }} ({{ airport.code }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="arrival" class="form-label">To</label>
+            <select class="form-select" id="arrival" name="arrival" required>
+              <option value="">Select airport</option>
+              {% for airport in airports %}
+                <option value="{{ airport.id }}">{{ airport.city }} ({{ airport.code }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label for="date" class="form-label">Departure Date</label>
+            <input type="date" class="form-control" id="date" name="date" required min="{{ today }}">
+          </div>
+          <div class="col-md-2">
+            <label for="passengers" class="form-label">Passengers</label>
+            <input type="number" class="form-control" id="passengers" name="passengers" min="1" max="10" value="1" required>
+          </div>
+          <div class="col-md-2">
+            <label for="class" class="form-label">Class</label>
+            <select class="form-select" id="class" name="class">
+              <option value="ECONOMY">Economy</option>
+              <option value="BUSINESS">Business</option>
+              <option value="FIRST">First Class</option>
+            </select>
+          </div>
+          <div class="col-md-12 mt-3">
+            <button type="submit" class="btn btn-primary">Search Flights</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Set today's date as default
+  document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date').value = today;
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment - Flight Booking{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Complete Your Payment</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">  <!-- Fixed: Added missing 'div' -->
+                        <div class="col-md-6">
+                            <h5>Booking Summary</h5>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <p class="mb-1"><strong>Reference:</strong> {{ booking.reference }}</p>
+                                    <p class="mb-1"><strong>Flight:</strong> {{ booking.flight.airline.code }}{{ booking.flight.flight_number }}</p>
+                                    <p class="mb-1"><strong>Departure:</strong> {{ booking.flight.departure_time|date:"M d, Y" }} at {{ booking.flight.departure_time|time }}</p>
+                                    <p class="mb-1"><strong>Passengers ({{ booking.nums_passengers }}):</strong></p>
+                                    <ul class="mb-1">
+                                        {% for passenger in passengers %}
+                                        <li>{{ passenger.first_name }} {{ passenger.last_name }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                    <p class="mb-1"><strong>Class:</strong> {{ booking.travel_class }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5>Payment Summary</h5>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <!-- Show base fare calculation -->
+                                        <tr>
+                                            <td>Base Fare ({{ booking.nums_passengers }} × ${{ booking.per_passenger_price|floatformat:2 }}):</td>
+                                            <td class="text-end">${{ booking.total_price|floatformat:2 }}</td>
+                                        </tr>
+                                        
+                                        <!-- Show breakdown per passenger -->
+                                        {% for i in "x"|rjust:booking.nums_passengers %}
+                                        <tr>
+                                            <td>Passenger {{ forloop.counter }} Fare:</td>
+                                            <td class="text-end">${{ booking.per_passenger_price|floatformat:2 }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                        
+                                        <tr class="table-active fw-bold">
+                                            <td>Total Amount:</td>
+                                            <td class="text-end">${{ booking.total_price|floatformat:2 }}</td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <!-- Verification message -->
+                                    {% if passengers|length != booking.nums_passengers %}
+                                    <div class="alert alert-warning mt-2">
+                                        <i class="bi bi-exclamation-triangle"></i> 
+                                        Note: Showing {{ passengers|length }} passengers of {{ booking.nums_passengers }} booked
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST" id="payment-form">
+                        {% csrf_token %}
+                        <h5 class="mb-3">Payment Method</h5>
+                        
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method" id="credit-card" value="credit_card" checked>
+                                <label class="form-check-label fw-bold" for="credit-card">
+                                    <i class="bi bi-credit-card"></i> Credit/Debit Card
+                                </label>
+                            </div>
+                            <div id="credit-card-form" class="mt-3 p-3 border rounded">
+                                <div class="row g-3">
+                                    <div class="col-md-12">
+                                        <label for="card-number" class="form-label">Card Number</label>
+                                        <input type="text" class="form-control" id="card-number" placeholder="1234 5678 9012 3456" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="card-name" class="form-label">Name on Card</label>
+                                        <input type="text" class="form-control" id="card-name" placeholder="John Doe" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="card-expiry" class="form-label">Expiry Date</label>
+                                        <input type="text" class="form-control" id="card-expiry" placeholder="MM/YY" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="card-cvv" class="form-label">CVV</label>
+                                        <input type="text" class="form-control" id="card-cvv" placeholder="123" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method" id="paypal" value="paypal">
+                                <label class="form-check-label fw-bold" for="paypal">
+                                    <i class="bi bi-paypal"></i> PayPal
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-lock-fill"></i> Pay ${{ booking.total_price|floatformat:2 }}
+                            </button>
+                            <a href="{% url 'booking_detail' booking.reference %}" class="btn btn-outline-secondary">
+                                Back to Booking Details
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="bi bi-shield-lock"></i> Secure Payment
+                        </small>
+                        <div>
+                            <img src="https://via.placeholder.com/40" alt="Visa" class="img-thumbnail border-0">
+                            <img src="https://via.placeholder.com/40" alt="Mastercard" class="img-thumbnail border-0">
+                            <img src="https://via.placeholder.com/40" alt="Amex" class="img-thumbnail border-0">
+                            <img src="https://via.placeholder.com/40" alt="PayPal" class="img-thumbnail border-0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Simple form validation
+document.getElementById('payment-form').addEventListener('submit', function(e) {
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+    
+    if (paymentMethod === 'credit_card') {
+        const cardNumber = document.getElementById('card-number').value;
+        const cardName = document.getElementById('card-name').value;
+        const cardExpiry = document.getElementById('card-expiry').value;
+        const cardCvv = document.getElementById('card-cvv').value;
+        
+        if (!cardNumber || !cardName || !cardExpiry || !cardCvv) {
+            e.preventDefault();
+            alert('Please fill in all credit card details');
+        }
+    }
+});
+
+// Toggle payment method forms
+document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        if (this.value === 'credit_card') {
+            document.getElementById('credit-card-form').style.display = 'block';
+        } else {
+            document.getElementById('credit-card-form').style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

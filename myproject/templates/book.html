@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container my-5">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Flight Booking</h4>
+            <p class="mb-0">Flight: {{ flight.airline.code }}{{ flight.flight_number }} from {{ flight.departure_airport.city }} to {{ flight.arrival_airport.city }}</p>
+        </div>
+        <div class="card-body">
+            <form method="POST" id="passengerForm">
+                {% csrf_token %}
+                
+                <!-- Flight Summary -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Flight Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p><strong>Departure:</strong><br>
+                                {{ flight.departure_airport.city }} ({{ flight.departure_airport.code }})<br>
+                                {{ flight.departure_time|date:"M d, Y H:i" }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Arrival:</strong><br>
+                                {{ flight.arrival_airport.city }} ({{ flight.arrival_airport.code }})<br>
+                                {{ flight.arrival_time|date:"M d, Y H:i" }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Class:</strong> {{ travel_class }}<br>
+                                <strong>Passengers:</strong> {{ passengers|length }}<br>
+                                <strong>Total Price:</strong> ${{ total_price }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                
+                <!-- Passengers Section -->
+                <div id="passengersContainer">
+                    {% for passenger_num in passengers %}
+                    <div class="card mb-4 passenger-card" id="passenger-{{ passenger_num }}">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Passenger {{ passenger_num }}</h5>
+                            {% if not forloop.first %}
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-passenger" 
+                                    data-passenger="{{ passenger_num }}">
+                                <i class="bi bi-trash"></i> Remove
+                            </button>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">First Name <span class="text-danger">*</label>
+                                    <input type="text" class="form-control" 
+                                           name="passenger_{{ passenger_num }}_first_name" 
+                                           required
+                                           placeholder="First Name">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Last Name <span class="text-danger">*</label>
+                                    <input type="text" class="form-control" 
+                                           name="passenger_{{ passenger_num }}_last_name" 
+                                           required
+                                           placeholder="Last Name">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Date of Birth<span class="text-danger"> *</label>
+                                    <input type="date" class="form-control" 
+                                           name="passenger_{{ passenger_num }}_dob" 
+                                           required
+                                           max="{{ max_date|date:'Y-m-d' }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">ID Type <span class="text-danger">*</label>
+                                    <select class="form-select" name="passenger_{{ passenger_num }}_id_type" required>
+                                        <option value="">Select ID Type</option>
+                                        <option value="PASSPORT">Passport</option>
+                                        <option value="NATIONAL_ID">National ID</option>
+                                        <option value="DRIVING_LICENSE">Driving License</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">ID Number<span class="text-danger"> *</label>
+                                    <input type="text" class="form-control" 
+                                           name="passenger_{{ passenger_num }}_id_number" 
+                                           required
+                                           placeholder="Enter ID number">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Passport Number(Optional)</label>
+                                    <input type="text" class="form-control" 
+                                           name="passenger_{{ passenger_num }}_passport_number" 
+                                           placeholder="Enter if available">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Add Passenger Button -->
+                <div class="d-grid mb-4">
+                    <button type="button" class="btn btn-outline-primary" id="addPassengerBtn">
+                        <i class="bi bi-plus-circle"></i> Add Another Passenger
+                    </button>
+                </div>
+                
+                <!-- Hidden fields -->
+                <input type="hidden" name="travel_class" value="{{ travel_class }}">
+                <input type="hidden" name="total_passengers" id="totalPassengers" value="{{ passengers|length }}">
+                
+                <!-- Submit Button -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        Continue to Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const passengersContainer = document.getElementById('passengersContainer');
+    const addPassengerBtn = document.getElementById('addPassengerBtn');
+    const totalPassengersInput = document.getElementById('totalPassengers');
+    let passengerCount = parseInt(totalPassengersInput.value);
+    
+    addPassengerBtn.addEventListener('click', function() {
+        passengerCount++;
+        totalPassengersInput.value = passengerCount;
+        
+        const newPassengerCard = document.createElement('div');
+        newPassengerCard.className = 'card mb-4 passenger-card';
+        newPassengerCard.id = `passenger-${passengerCount}`;
+        
+        newPassengerCard.innerHTML = `
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Passenger ${passengerCount}</h5>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-passenger" data-passenger="${passengerCount}">
+                    <i class="bi bi-trash"></i> Remove
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">First Name *</label>
+                        <input type="text" class="form-control" 
+                               name="passenger_${passengerCount}_first_name" 
+                               required
+                               placeholder="John">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Last Name *</label>
+                        <input type="text" class="form-control" 
+                               name="passenger_${passengerCount}_last_name" 
+                               required
+                               placeholder="Doe">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Date of Birth *</label>
+                        <input type="date" class="form-control" 
+                               name="passenger_${passengerCount}_dob" 
+                               required
+                               max="{{ max_date|date:'Y-m-d' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">ID Type *</label>
+                        <select class="form-select" name="passenger_${passengerCount}_id_type" required>
+                            <option value="">Select ID Type</option>
+                            <option value="PASSPORT">Passport</option>
+                            <option value="NATIONAL_ID">National ID</option>
+                            <option value="DRIVING_LICENSE">Driving License</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">ID Number *</label>
+                        <input type="text" class="form-control" 
+                               name="passenger_${passengerCount}_id_number" 
+                               required
+                               placeholder="Enter ID number">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Passport Number</label>
+                        <input type="text" class="form-control" 
+                               name="passenger_${passengerCount}_passport_number" 
+                               placeholder="Enter if available">
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        passengersContainer.appendChild(newPassengerCard);
+    });
+    
+    // Event delegation for remove buttons
+    passengersContainer.addEventListener('click', function(e) {
+        const removeBtn = e.target.closest('.remove-passenger');
+        if (removeBtn) {
+            const passengerNumber = removeBtn.dataset.passenger;
+            const passengerCard = document.getElementById(`passenger-${passengerNumber}`);
+            
+            if (passengerNumber !== '1') {
+                passengerCard.remove();
+                passengerCount--;
+                totalPassengersInput.value = passengerCount;
+                
+                // Renumber remaining passengers
+                const passengerCards = document.querySelectorAll('.passenger-card');
+                passengerCards.forEach((card, index) => {
+                    const newNumber = index + 1;
+                    card.id = `passenger-${newNumber}`;
+                    card.querySelector('.card-header h5').textContent = `Passenger ${newNumber}`;
+                    
+                    // Update all input names
+                    const inputs = card.querySelectorAll('input, select');
+                    inputs.forEach(input => {
+                        input.name = input.name.replace(/passenger_\d+_/, `passenger_${newNumber}_`);
+                    });
+                    
+                    // Update remove button data attribute
+                    const btn = card.querySelector('.remove-passenger');
+                    if (btn) btn.dataset.passenger = newNumber;
+                });
+            }
+        }
+    });
+});
+</script>
+
+<style>
+.remove-passenger {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+}
+</style>
+{% endblock %}
