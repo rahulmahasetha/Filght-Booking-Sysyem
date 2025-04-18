@@ -21,7 +21,23 @@
 
 LOCK TABLES `home_airport` WRITE;
 /*!40000 ALTER TABLE `home_airport` DISABLE KEYS */;
-INSERT INTO `home_airport` VALUES (1,'JFK','John F. Kennedy International Airport','New York','USA',NULL),(2,'LHR','Heathrow Airport','London','UK',NULL),(3,'DXB','Dubai International Airport','Dubai','UAE',NULL),(4,'SIN','Singapore Changi Airport','Singapore','Singapore',NULL),(5,'HND','Haneda Airport','Tokyo','Japan','airports/OIP_1.jfif'),(6,'DEL','Indira Gandhi International Airport','New Delhi','India',''),(7,'BOM','Chhatrapati Shivaji Maharaj International Airport','Mumbai','India',''),(8,'HYD','Rajiv Gandhi International Airport','Hyderabad','India',''),(9,'CCU','Netaji Subhas Chandra Bose International Airport','Kolkata','India',''),(10,'MAA','Chennai International Airport','Chennai','India',''),(11,'VNS','Lal Bahadur Shastri International Airport','Varanasi','India',''),(12,'PUN','Pune Airport','pune','India',''),(13,'DBR','Darbhanga Airport','Darbhanga','India',''),(14,'PAT','Jay Prakash Narayan International Airport','Patna','India',''),(15,'VGA','​Vijayawada International Airport,','Vijayawada','India',''),(16,'KTM','Tribhuvan International Airport','Kathmandu','Nepal',''),(17,'BHR','Gautam Buddha Airport','Bhairahawa','Nepal','');
+INSERT INTO `home_airport` VALUES (1,'JFK','John F. Kennedy International Airport','New York','USA',NULL),
+  (2,'LHR','Heathrow Airport','London','UK',NULL),
+  (3,'DXB','Dubai International Airport','Dubai','UAE',NULL),
+  (4,'SIN','Singapore Changi Airport','Singapore','Singapore',NULL),
+  (5,'HND','Haneda Airport','Tokyo','Japan','airports/OIP_1.jfif'),
+  (6,'DEL','Indira Gandhi International Airport','New Delhi','India',''),
+  (7,'BOM','Chhatrapati Shivaji Maharaj International Airport','Mumbai','India',''),
+  (8,'HYD','Rajiv Gandhi International Airport','Hyderabad','India',''),
+  (9,'CCU','Netaji Subhas Chandra Bose International Airport','Kolkata','India',''),
+  (10,'MAA','Chennai International Airport','Chennai','India',''),
+  (11,'VNS','Lal Bahadur Shastri International Airport','Varanasi','India',''),
+  (12,'PUN','Pune Airport','pune','India',''),
+  (13,'DBR','Darbhanga Airport','Darbhanga','India',''),
+  (14,'PAT','Jay Prakash Narayan International Airport','Patna','India',''),
+  (15,'VGA','​Vijayawada International Airport,','Vijayawada','India',''),
+  (16,'KTM','Tribhuvan International Airport','Kathmandu','Nepal',''),
+  (17,'BHR','Gautam Buddha Airport','Bhairahawa','Nepal','');
 /*!40000 ALTER TABLE `home_airport` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
