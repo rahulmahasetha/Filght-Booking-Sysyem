@@ -1,7 +1,9 @@
 from django.db import models
 from decimal import Decimal
 from datetime import timedelta
-
+from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator
+import random
 # Create your models here.
 
 class Contact(models.Model):
@@ -11,11 +13,6 @@ class Contact(models.Model):
     pincode = models.CharField(max_length=100)
     message = models.TextField()
     date = models.DateTimeField(null=True, blank=True)
-
-
-from django.contrib.auth.models import User
-from django.core.validators import MinValueValidator
-import random
 
 class Airport(models.Model):
     code = models.CharField(max_length=3, unique=True)
@@ -70,10 +67,7 @@ class Flight(models.Model):
     def __str__(self):
         return f"{self.airline.code}{self.flight_number}"
 
-import random
-from decimal import Decimal
-from django.db import models
-from django.contrib.auth.models import User
+
 
 class Booking(models.Model):
     STATUS_CHOICES = [
