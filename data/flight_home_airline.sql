@@ -21,7 +21,19 @@
 
 LOCK TABLES `home_airline` WRITE;
 /*!40000 ALTER TABLE `home_airline` DISABLE KEYS */;
-INSERT INTO `home_airline` VALUES (1,'American Airlines','AA','airlines/American-Airlines-Logo.png'),(2,'British Airways','BA','airlines/British-Airways-Logo-1997-present.jpg'),(3,'Emirates','EK','airlines/Emirates-Logo-1985.jpg'),(4,'Singapore Airlines','SQ','airlines/R.jfif'),(5,'Japan Airlines','JL','airlines/japan-airlines-logo.png'),(6,'Lufthansa','LH','airlines/Lufthansa-Logo-1953-1963.png'),(7,'Air France','AF','airlines/OIP.jfif'),(8,'Qatar Airways','QR','airlines/Qatar-Airways-Logo-2006-present.jpg'),(9,'Cathay Pacific','CX','airlines/Cathay-Pacific-Logo.png'),(10,'Qantas','QF','airlines/Qantas-Logo.png'),(11,'Nepal Airlines','NA','airlines/R.png'),(12,'Indigo','IG','airlines/IndiGo-Logo.wine.png'),(13,'Air India','AI','airlines/OIP_2.jfif');
+INSERT INTO `home_airline` VALUES (1,'American Airlines','AA','airlines/American-Airlines-Logo.png'),
+  (2,'British Airways','BA','airlines/British-Airways-Logo-1997-present.jpg'),
+  (3,'Emirates','EK','airlines/Emirates-Logo-1985.jpg'),
+  (4,'Singapore Airlines','SQ','airlines/R.jfif'),
+  (5,'Japan Airlines','JL','airlines/japan-airlines-logo.png'),
+  (6,'Lufthansa','LH','airlines/Lufthansa-Logo-1953-1963.png'),
+  (7,'Air France','AF','airlines/OIP.jfif'),
+  (8,'Qatar Airways','QR','airlines/Qatar-Airways-Logo-2006-present.jpg'),
+  (9,'Cathay Pacific','CX','airlines/Cathay-Pacific-Logo.png'),
+  (10,'Qantas','QF','airlines/Qantas-Logo.png'),
+  (11,'Nepal Airlines','NA','airlines/R.png'),
+  (12,'Indigo','IG','airlines/IndiGo-Logo.wine.png'),
+  (13,'Air India','AI','airlines/OIP_2.jfif');
 /*!40000 ALTER TABLE `home_airline` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
