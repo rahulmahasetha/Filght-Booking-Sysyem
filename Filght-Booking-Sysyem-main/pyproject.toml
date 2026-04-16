@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "filght-booking-system"
 version = "1.0.0"
@@ -12,9 +16,12 @@ dependencies = [
     "gunicorn==21.2.0",
 ]
 
-[build-system]
-requires = ["setuptools>=45", "wheel"]
-build-backend = "setuptools.build_meta"
+[project.optional-dependencies]
+dev = [
+    "black",
+    "flake8",
+]
 
 [tool.setuptools]
 packages = ["myproject", "home"]
+
