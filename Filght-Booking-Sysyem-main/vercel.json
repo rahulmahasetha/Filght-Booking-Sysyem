@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "buildCommand": "pip install --no-cache-dir -r requirements.txt && python myproject/manage.py collectstatic --noinput --clear",
   "builds": [
     {
       "src": "myproject/wsgi.py",
