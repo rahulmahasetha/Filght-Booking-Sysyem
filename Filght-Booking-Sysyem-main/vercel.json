@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "buildCommand": "python myproject/manage.py collectstatic --noinput",
   "builds": [
     {
       "src": "myproject/wsgi.py",
