@@ -15,16 +15,23 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,include
-
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 admin.site.site_header = "Uddan Admin"
 admin.site.site_title = "FLIGHT BOOKING"
 admin.site.index_title = "Welcome to Uddan"
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('',include('home.url'))
+    path('', include('home.urls'))  # Fixed: was 'home.url'
 ]
+
+# Serve media files in development/production
+if settings.DEBUG or True:  # Always serve in production for Vercel
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 
 class MyModelAdmin(admin.ModelAdmin):
