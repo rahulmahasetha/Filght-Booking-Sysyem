@@ -10,6 +10,9 @@ echo "==> Collecting static files..."
 cd myproject
 python manage.py collectstatic --noinput --clear
 
+echo "==> Copying media files to static distribution..."
+cp -r media staticfiles/media
+
 echo "==> Running database migrations..."
 python manage.py migrate --noinput
 
