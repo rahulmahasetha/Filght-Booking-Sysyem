@@ -51,7 +51,7 @@
                 <div class="card-body">
                     <i class="bi bi-currency-dollar text-warning mb-2" style="font-size: 2rem;"></i>
                     <h5 class="card-title text-muted">Total Spent</h5>
-                    <h2 class="fw-bold">₹{{ stats.total_spent|floatformat:2 }}</h2>
+                    <h2 class="fw-bold">INR {{ stats.total_spent|floatformat:2 }}</h2>
                 </div>
             </div>
         </div>
@@ -129,7 +129,7 @@
                                 <span class="badge rounded-pill bg-{% if booking.status == 'CONFIRMED' %}success{% elif booking.status == 'CANCELLED' %}danger{% else %}warning{% endif %} px-3 py-2">
                                     {{ booking.status }}
                                 </span>
-                                <p class="mt-2 mb-0 fw-bold text-primary">₹{{ booking.total_price }}</p>
+                                <p class="mt-2 mb-0 fw-bold text-primary">INR {{ booking.total_price }}</p>
                             </div>
                             <div class="col-md-3 text-end">
                                 <a href="{% url 'booking_detail' booking.reference %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">View Details</a>

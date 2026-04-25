@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Payment - Flight Booking{% endblock %}
 
@@ -43,28 +43,28 @@
                                     <table class="table table-sm">
                                         <!-- Show base fare calculation -->
                                         <tr>
-                                            <td>Base Fare ({{ booking.nums_passengers }} × ₹{{ booking.per_passenger_price|floatformat:2 }}):</td>
-                                            <td class="text-end">₹{{ booking.total_price|floatformat:2 }}</td>
+                                            <td>Base Fare ({{ booking.nums_passengers }} Ã— INR {{ booking.per_passenger_price|floatformat:2 }}):</td>
+                                            <td class="text-end">INR {{ booking.total_price|floatformat:2 }}</td>
                                         </tr>
                                         
                                         <!-- Show breakdown per passenger -->
                                         {% for i in "x"|rjust:booking.nums_passengers %}
                                         <tr>
                                             <td>Passenger {{ forloop.counter }} Fare:</td>
-                                            <td class="text-end">₹{{ booking.per_passenger_price|floatformat:2 }}</td>
+                                            <td class="text-end">INR {{ booking.per_passenger_price|floatformat:2 }}</td>
                                         </tr>
                                         {% endfor %}
                                         
                                         {% if discount %}
                                         <tr class="text-success">
                                             <td>Discount (First Booking):</td>
-                                            <td class="text-end">-₹{{ discount|floatformat:2 }}</td>
+                                            <td class="text-end">-INR {{ discount|floatformat:2 }}</td>
                                         </tr>
                                         {% endif %}
                                         
                                         <tr class="table-active fw-bold">
                                             <td>Total Amount:</td>
-                                            <td class="text-end" id="final-amount">₹{{ final_price|default:booking.total_price|floatformat:2 }}</td>
+                                            <td class="text-end" id="final-amount">INR {% if coupon_applied %}{{ final_price|floatformat:2 }}{% else %}{{ booking.total_price|floatformat:2 }}{% endif %}</td>
                                         </tr>
                                     </table>
                                     
@@ -86,7 +86,7 @@
                         <!-- Coupon Code Section -->
                         <div class="card mb-4 border-success">
                             <div class="card-body">
-                                <h5 class="card-title text-success"><i class="bi bi-tag-fill"></i> Have a Coupon₹</h5>
+                                <h5 class="card-title text-success"><i class="bi bi-tag-fill"></i> Have a Coupon?</h5>
                                 <div class="input-group">
                                     <input type="text" name="coupon_code" class="form-control" placeholder="Enter coupon code" id="coupon-input" value="{{ coupon_applied|default:'' }}">
                                     <button class="btn btn-outline-success" type="submit" name="apply_coupon" value="1">Apply</button>
@@ -137,7 +137,7 @@
 
                         <div class="d-grid gap-2">
                             <button type="submit" name="complete_payment" value="1" class="btn btn-primary btn-lg">
-                                <i class="bi bi-lock-fill"></i> Pay ₹{{ final_price|default:booking.total_price|floatformat:2 }}
+                                <i class="bi bi-lock-fill"></i> Pay INR {{ final_price|default:booking.total_price|floatformat:2 }}
                             </button>
                             <a href="{% url 'booking_detail' booking.reference %}" class="btn btn-outline-secondary">
                                 Back to Booking Details
