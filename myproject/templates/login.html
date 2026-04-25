@@ -14,11 +14,11 @@
                     <form method="POST">
                         {% csrf_token %}
                         {% if form.errors %}
-                            <div class="alert alert-danger">
-                                Your username and password didn't match. Please try again.
-                            </div>
+                        <div class="alert alert-danger">
+                            Your username and password didn't match. Please try again.
+                        </div>
                         {% endif %}
-                        
+
                         <div class="mb-3">
                             <label for="id_username" class="form-label">Username</label>
                             <input type="text" name="username" class="form-control" id="id_username" required>
@@ -33,11 +33,64 @@
                     </form>
                     <div class="mt-3 text-center">
                         <p>Don't have an account? <a href="{% url 'register' %}">Register here</a></p>
-                        <p><a href="#">Forgot your password?</a></p>
+                        <button type="button" class="btn btn-link text-decoration-none" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">
+                            Forgot your password?
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Forgot Password Modal -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white border-0">
+                <h5 class="modal-title" id="forgotPasswordModalLabel">Reset Password</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{% url 'resetpw' %}" method="POST" id="resetPasswordForm">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label for="reset_username" class="form-label fw-bold small text-uppercase">Username</label>
+                        <input type="text" name="username" class="form-control bg-light border-0" id="reset_username" required placeholder="Enter your username">
+                    </div>
+                    <div class="mb-3">
+                        <label for="reset_password" class="form-label fw-bold small text-uppercase">New Password</label>
+                        <input type="password" name="password" class="form-control bg-light border-0" id="reset_password" required placeholder="New password">
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label fw-bold small text-uppercase">Confirm New Password</label>
+                        <input type="password" name="confirm_password" class="form-control bg-light border-0" id="confirm_password" required placeholder="Confirm new password">
+                        <div id="passwordError" class="text-danger xsmall mt-1 d-none">Passwords do not match.</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4 shadow-sm">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('resetPasswordForm').addEventListener('submit', function(e) {
+    const password = document.getElementById('reset_password').value;
+    const confirm = document.getElementById('confirm_password').value;
+    const errorDiv = document.getElementById('passwordError');
+    
+    if (password !== confirm) {
+        e.preventDefault();
+        errorDiv.classList.remove('d-none');
+        document.getElementById('confirm_password').classList.add('is-invalid');
+    } else {
+        errorDiv.classList.add('d-none');
+        document.getElementById('confirm_password').classList.remove('is-invalid');
+    }
+});
+</script>
 {% endblock %}

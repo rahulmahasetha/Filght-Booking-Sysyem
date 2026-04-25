@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import Contact, Airport, Airline, Flight, Booking, Passenger, Payment
+from django.contrib.auth.models import User
 from datetime import datetime, date
 import random
 
@@ -446,7 +447,7 @@ def admin_dashboard_api(request):
         total_capacity = top_flight.economy_seats + top_flight.business_seats + top_flight.first_class_seats
         # Calculate occupancy (booked passengers / total capacity)
         booked_passengers = Booking.objects.filter(flight=top_flight, status='CONFIRMED').aggregate(Sum('nums_passengers'))['nums_passengers__sum'] or 0
-        occupancy = int((booked_passengers / total_capacity) * 100) if total_capacity > 0 else 0
+        occupancy = int((booked_passengers / total_capacity * 100)) if total_capacity > 0 else 0
         
         top_flight_data = {
             'code': f"{top_flight.airline.code}{top_flight.flight_number}",
@@ -500,3 +501,53 @@ def admin_dashboard_api(request):
             'bookings': bookings_chart_data
         }
     })
+
+def flight_availability_api(request):
+    departure_id = request.GET.get('departure')
+    arrival_id = request.GET.get('arrival')
+    if not departure_id or not arrival_id:
+        return JsonResponse({'error': 'Missing parameters'}, status=400)
+    from django.utils import timezone
+    flights = Flight.objects.filter(departure_airport_id=departure_id, arrival_airport_id=arrival_id, departure_time__gte=timezone.now())
+    availability = {}
+    for flight in flights:
+        date_str = flight.departure_time.strftime('%Y-%m-%d')
+        total_seats = flight.economy_seats + flight.business_seats + flight.first_class_seats
+        if total_seats >= 20:
+            status = 'green'
+        elif total_seats > 0:
+            status = 'yellow'
+        else:
+            status = 'red'
+        if date_str not in availability:
+            availability[date_str] = status
+        else:
+            current = availability[date_str]
+            if status == 'green' or (status == 'yellow' and current == 'red'):
+                availability[date_str] = status
+    return JsonResponse(availability)
+
+def reset_password_direct(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        new_password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        if not all([username, new_password, confirm_password]):
+            messages.error(request, 'All fields are required.')
+            return redirect('login')
+            
+        if new_password != confirm_password:
+            messages.error(request, 'Passwords do not match.')
+            return redirect('login')
+            
+        try:
+            user = User.objects.get(username=username)
+            user.set_password(new_password)
+            user.save()
+            messages.success(request, 'Password updated successfully. You can now login.')
+        except User.DoesNotExist:
+            messages.error(request, 'Username not found.')
+            
+        return redirect('login')
+    return redirect('login')

@@ -19,7 +19,7 @@
             <select class="form-select" id="departure" name="departure" required>
               <option value="">Select airport</option>
               {% for airport in airports %}
-                <option value="{{ airport.id }}">{{ airport.city }} ({{ airport.code }})</option>
+              <option value="{{ airport.id }}">{{ airport.city }} ({{ airport.code }})</option>
               {% endfor %}
             </select>
           </div>
@@ -28,7 +28,7 @@
             <select class="form-select" id="arrival" name="arrival" required>
               <option value="">Select airport</option>
               {% for airport in airports %}
-                <option value="{{ airport.id }}">{{ airport.city }} ({{ airport.code }})</option>
+              <option value="{{ airport.id }}">{{ airport.city }} ({{ airport.code }})</option>
               {% endfor %}
             </select>
           </div>
@@ -38,7 +38,8 @@
           </div>
           <div class="col-md-2">
             <label for="passengers" class="form-label">Passengers</label>
-            <input type="number" class="form-control" id="passengers" name="passengers" min="1" max="10" value="1" required>
+            <input type="number" class="form-control" id="passengers" name="passengers" min="1" max="10" value="1"
+              required>
           </div>
           <div class="col-md-2">
             <label for="class" class="form-label">Class</label>
@@ -61,7 +62,7 @@
 {% block scripts %}
 <script>
   // Set today's date as default
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('date').value = today;
   });

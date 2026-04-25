@@ -24,6 +24,8 @@ urlpatterns = [
     path('profile/', views.profile_view, name='profile'),
     path('profile/update/', views.update_profile, name='update_profile'),
     path('admin-api/', views.admin_dashboard_api, name='admin_dashboard_api'),
+    path('api/flight-availability/', views.flight_availability_api, name='flight_availability_api'),
+    path('reset-password/', views.reset_password_direct, name='resetpw'),
     
     # User account
     path('my-bookings/', views.my_bookings, name='my_bookings'),
