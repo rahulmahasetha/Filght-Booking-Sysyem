@@ -1,0 +1,287 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/dashboard.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    /* Dark mode airline theme & Glassmorphism */
+    #content {
+        background: #121212;
+        color: #e0e0e0;
+        font-family: 'Inter', sans-serif;
+    }
+    .glass-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        transition: transform 0.2s;
+    }
+    .glass-card:hover {
+        transform: translateY(-5px);
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #4da6ff;
+        margin-top: 10px;
+    }
+    .dashboard-header {
+        background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        color: white;
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+    .top-flight {
+        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+        color: #333;
+    }
+    .top-flight .stat-value { color: #d6336c; }
+    
+    /* Ensure Django's default app_list is styled */
+    #content-main { float: none; width: 100%; }
+    .app-app_list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    .module table { width: 100%; }
+    .module caption { background: #1e3c72; border-radius: 6px 6px 0 0; }
+    .module th, .module td { border-bottom: 1px solid rgba(255,255,255,0.1); }
+    a { color: #4da6ff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="dashboard-header">
+        <h1>✈ Airline Management Dashboard</h1>
+        <p>Live Booking Analytics & Dynamic Pricing Control Center</p>
+    </div>
+
+    <!-- Live Analytics Stats -->
+    <div class="stats-grid">
+        <div class="glass-card">
+            <h3>Total Revenue</h3>
+            <div class="stat-value" id="stat-revenue">Loading...</div>
+        </div>
+        <div class="glass-card">
+            <h3>Total Bookings</h3>
+            <div class="stat-value" id="stat-bookings">...</div>
+        </div>
+        <div class="glass-card">
+            <h3>Active Flights</h3>
+            <div class="stat-value" id="stat-active-flights">...</div>
+        </div>
+        <div class="glass-card">
+            <h3>Registered Users</h3>
+            <div class="stat-value" id="stat-users">...</div>
+        </div>
+        <div class="glass-card">
+            <h3 style="color: #ff9999;">Cancellations</h3>
+            <div class="stat-value" id="stat-cancellations" style="color: #ff9999;">...</div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 30px;">
+        <!-- Chart -->
+        <div class="glass-card">
+            <h2>Revenue & Bookings Trend</h2>
+            <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Top Flight -->
+        <div style="display:flex; flex-direction:column; gap:20px;">
+            <div class="glass-card top-flight" style="margin-bottom:0;">
+                <h2>🏆 Top Performing Flight</h2>
+                <div id="top-flight-content">
+                    <p>Loading...</p>
+                </div>
+            </div>
+            
+            <div class="glass-card" style="background: rgba(255, 100, 100, 0.1); border-color: rgba(255,100,100,0.3);">
+                <h2>⚠️ Low Seat Alerts</h2>
+                <div id="low-seats-content">
+                    <p>Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Standard Django App List -->
+    <h2>System Modules</h2>
+    <div class="app-app_list">
+        {% if app_list %}
+            {% for app in app_list %}
+                <div class="glass-card module" style="padding:0; overflow:hidden;">
+                    <table style="width:100%; border-collapse: collapse;">
+                    <caption style="padding:10px; font-weight:bold;">
+                        <a href="{{ app.app_url }}" style="color:white; text-decoration:none;" class="section" title="{% blocktranslate with name=app.name %}Models in the {{ name }} application{% endblocktranslate %}">{{ app.name }}</a>
+                    </caption>
+                    {% for model in app.models %}
+                        <tr class="model-{{ model.object_name|lower }}{% if model.admin_url in request.path %} current-app{% endif %}">
+                        {% if model.admin_url %}
+                            <th scope="row" style="padding:10px;"><a href="{{ model.admin_url }}" {% if model.admin_url in request.path %} aria-current="page"{% endif %}>{{ model.name }}</a></th>
+                        {% else %}
+                            <th scope="row" style="padding:10px;">{{ model.name }}</th>
+                        {% endif %}
+                        {% if model.add_url %}
+                            <td style="padding:10px;"><a href="{{ model.add_url }}" class="addlink">{% translate 'Add' %}</a></td>
+                        {% else %}
+                            <td></td>
+                        {% endif %}
+                        {% if model.admin_url and show_privilege_detail %}
+                            {% if model.view_only %}
+                            <td style="padding:10px;"><a href="{{ model.admin_url }}" class="viewlink">{% translate 'View' %}</a></td>
+                            {% else %}
+                            <td style="padding:10px;"><a href="{{ model.admin_url }}" class="changelink">{% translate 'Change' %}</a></td>
+                            {% endif %}
+                        {% elif show_privilege_detail %}
+                            <td></td>
+                        {% endif %}
+                        </tr>
+                    {% endfor %}
+                    </table>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>{% translate 'You don’t have permission to view or edit anything.' %}</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/admin-api/')
+            .then(res => res.json())
+            .then(data => {
+                // Update stats
+                document.getElementById('stat-revenue').textContent = '$' + data.stats.total_revenue.toLocaleString();
+                document.getElementById('stat-bookings').textContent = data.stats.total_bookings.toLocaleString();
+                document.getElementById('stat-active-flights').textContent = data.stats.active_flights.toLocaleString();
+                document.getElementById('stat-users').textContent = data.stats.total_users.toLocaleString();
+                document.getElementById('stat-cancellations').textContent = data.stats.total_cancellations.toLocaleString();
+                
+                // Update Top Flight
+                const tf = data.top_flight;
+                if (tf) {
+                    document.getElementById('top-flight-content').innerHTML = `
+                        <h3 style="color: #333">${tf.code}</h3>
+                        <p style="color: #444; margin-bottom:5px;"><strong>Route:</strong> ${tf.route}</p>
+                        <p style="color: #444; margin-bottom:5px;"><strong>Total Bookings:</strong> ${tf.bookings}</p>
+                        <p style="color: #444; margin-bottom:5px;"><strong>Revenue:</strong> $${tf.revenue}</p>
+                        <p style="color: #444; margin-bottom:5px;"><strong>Occupancy:</strong> ${tf.occupancy}%</p>
+                        <div style="background: rgba(0,0,0,0.1); height:8px; border-radius:4px; margin-top:10px;">
+                            <div style="background: #d6336c; height:100%; border-radius:4px; width: ${tf.occupancy}%;"></div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('top-flight-content').innerHTML = '<p style="color:#555;">No flight data available yet.</p>';
+                }
+                
+                // Update Low Seats
+                const lsf = data.low_seat_flights;
+                let lsfHtml = '';
+                if(lsf && lsf.length > 0) {
+                    lsf.forEach(f => {
+                        lsfHtml += `
+                        <div style="border-bottom: 1px solid rgba(255,255,255,0.1); padding: 8px 0; display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <strong style="color: #ff9999;">${f.code}</strong><br>
+                                <small style="color: #bbb;">${f.route}</small>
+                            </div>
+                            <div style="text-align:right;">
+                                <span style="background: #ff4d4d; color: white; padding: 2px 8px; border-radius: 10px; font-size:0.8rem; font-weight:bold;">${f.seats} seats left</span><br>
+                                <a href="/admin/home/flight/${f.id}/change/" style="font-size:0.8rem; color: #4da6ff;">Adjust Price</a>
+                            </div>
+                        </div>`;
+                    });
+                    document.getElementById('low-seats-content').innerHTML = lsfHtml;
+                } else {
+                    document.getElementById('low-seats-content').innerHTML = '<p style="color:#aaa;">No flights with low seats right now.</p>';
+                }
+                
+                // Render Chart
+                const ctx = document.getElementById('trendChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.charts.labels,
+                        datasets: [
+                            {
+                                label: 'Revenue ($)',
+                                data: data.charts.revenue,
+                                borderColor: '#4da6ff',
+                                backgroundColor: 'rgba(77, 166, 255, 0.2)',
+                                fill: true,
+                                yAxisID: 'y',
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Bookings',
+                                data: data.charts.bookings,
+                                borderColor: '#ff9999',
+                                backgroundColor: 'rgba(255, 153, 153, 0.2)',
+                                fill: true,
+                                yAxisID: 'y1',
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: { display: true, text: 'Revenue', color: '#e0e0e0' },
+                                ticks: { color: '#e0e0e0' }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: { display: true, text: 'Bookings', color: '#e0e0e0' },
+                                ticks: { color: '#e0e0e0' },
+                                grid: { drawOnChartArea: false }
+                            },
+                            x: {
+                                ticks: { color: '#e0e0e0' }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: { color: '#e0e0e0' }
+                            }
+                        }
+                    }
+                });
+            });
+    });
+</script>
+{% endblock %}

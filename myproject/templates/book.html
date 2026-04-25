@@ -30,8 +30,8 @@
                             </div>
                             <div class="col-md-4">
                                 <p><strong>Class:</strong> {{ travel_class }}<br>
-                                <strong>Passengers:</strong> {{ passengers|length }}<br>
-                                <strong>Total Price:</strong> ${{ total_price }}</p>
+                                <strong>Passengers:</strong> <span id="displayPassengers">{{ passengers|length }}</span><br>
+                                <strong>Total Price:</strong> $<span id="displayTotalPrice">{{ total_price }}</span></p>
                             </div>
                         </div>
                     </div>
@@ -129,11 +129,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const passengersContainer = document.getElementById('passengersContainer');
     const addPassengerBtn = document.getElementById('addPassengerBtn');
     const totalPassengersInput = document.getElementById('totalPassengers');
+    const displayPassengers = document.getElementById('displayPassengers');
+    const displayTotalPrice = document.getElementById('displayTotalPrice');
+    const basePrice = {{ price }};
+    
     let passengerCount = parseInt(totalPassengersInput.value);
+    
+    function updateSummary() {
+        displayPassengers.textContent = passengerCount;
+        displayTotalPrice.textContent = (basePrice * passengerCount).toFixed(2);
+    }
     
     addPassengerBtn.addEventListener('click', function() {
         passengerCount++;
         totalPassengersInput.value = passengerCount;
+        updateSummary();
         
         const newPassengerCard = document.createElement('div');
         newPassengerCard.className = 'card mb-4 passenger-card';
@@ -209,6 +219,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 passengerCard.remove();
                 passengerCount--;
                 totalPassengersInput.value = passengerCount;
+                updateSummary();
                 
                 // Renumber remaining passengers
                 const passengerCards = document.querySelectorAll('.passenger-card');

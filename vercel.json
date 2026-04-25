@@ -2,27 +2,34 @@
   "version": 2,
   "builds": [
     {
-      "src": "Filght-Booking-Sysyem-main/myproject/wsgi.py",
+      "src": "myproject/myproject/wsgi.py",
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "50mb",
-        "runtime": "python3.12",
-        "missingFrameworkWarning": false
+        "runtime": "python3.12"
+      }
+    },
+    {
+      "src": "build_files.sh",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "myproject/staticfiles"
       }
     }
   ],
   "routes": [
     {
       "src": "/static/(.*)",
-      "dest": "/static/$1"
+      "dest": "/myproject/staticfiles/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "Filght-Booking-Sysyem-main/myproject/wsgi.py"
+      "dest": "myproject/myproject/wsgi.py"
     }
   ],
   "env": {
     "DJANGO_SETTINGS_MODULE": "myproject.settings",
-    "PYTHONUNBUFFERED": "1"
+    "PYTHONUNBUFFERED": "1",
+    "PYTHONPATH": "myproject"
   }
 }

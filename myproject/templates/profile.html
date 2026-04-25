@@ -1,182 +1,345 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}My Profile{% endblock %}
+{% block title %}My Dashboard{% endblock %}
 
 {% block body %}
-  <div class="container my-5">
-    <div class="row">
-      <div class="col-md-4">
-        <!-- Profile Card -->
-        <div class="card shadow-sm mb-4">
-          <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Profile Information</h4>
-          </div>
-          <div class="card-body text-center">
-            <div class="mb-3">
-              <div class="profile-avatar mx-auto">
-                <i class="bi bi-person-circle" style="font-size: 5rem;"></i>
-              </div>
+<div class="container my-5">
+    <!-- Toast Notifications -->
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050">
+        <div id="liveToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="toastMessage">
+                    Profile updated successfully!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-            <h3>{{ user.get_full_name|default:user.username }}</h3>
-            <p class="text-muted">{{ user.email }}</p>
-            <hr>
-            <div class="d-grid gap-2">
-              <a href="#" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
-                <i class="bi bi-pencil-square"></i> Edit Profile
-              </a>
-              <a href="#" class="btn btn-outline-secondary">
-                <i class="bi bi-shield-lock"></i> Change Password
-              </a>
-            </div>
-          </div>
-          <div class="card-footer bg-light">
-            <small class="text-muted">Member since {{ user.date_joined|date:"M Y" }}</small>
-          </div>
         </div>
-
-        <!-- Loyalty Program Card -->
-        <div class="card shadow-sm">
-          <div class="card-header bg-info text-white">
-            <h4 class="mb-0">Frequent Flyer</h4>
-          </div>
-          <div class="card-body">
-            <div class="progress mb-3" style="height: 20px;">
-              <div class="progress-bar progress-bar-striped bg-success" role="progressbar" 
-                   style="width: 65%;" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100">
-                Silver Status (65%)
-              </div>
-            </div>
-            <p class="mb-2"><strong>Miles Earned:</strong> 12,500</p>
-            <p class="mb-2"><strong>Next Tier:</strong> Gold (20,000 miles)</p>
-            <p class="mb-0"><strong>Benefits:</strong> Priority boarding, free baggage</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-8">
-        <div class="row">
-          <div class="col-md-8">
-            <!-- Main Content -->
-            <h2>Booking Status</h2>
-            <a href="{% url 'my_bookings' %}" class="btn btn-primary" role="button">View Details</a>
-          </div>
-          <div class="col-md-4">
-          </div>
-        </div>
-<pre>
-
-    
-</pre>
-        <!-- Upcoming Trips -->
-        <div class="card shadow-sm">
-          <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Upcoming Trips</h4>
-          </div>
-          <div class="card-body">
-            {% if upcoming_bookings %}
-            <div class="table-responsive">
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Flight</th>
-                    <th>Route</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for booking in upcoming_bookings %}
-                  <tr>
-                    <td>{{ booking.flight.departure_time|date:"M d" }}</td>
-                    <td>{{ booking.flight.airline.code }}{{ booking.flight.flight_number }}</td>
-                    <td>
-                      {{ booking.flight.departure_airport.code }} → 
-                      {{ booking.flight.arrival_airport.code }}
-                    </td>
-                    <td>
-                      <span class="badge bg-{% if booking.status == 'CONFIRMED' %}success{% else %}warning{% endif %}">
-                        {{ booking.status }}
-                      </span>
-                    </td>
-                    <td>
-                      <a href="{% url 'booking_detail' booking.reference %}" class="btn btn-sm btn-outline-primary">
-                        View
-                      </a>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-            {% else %}
-            <div class="alert alert-info">
-              You don't have any upcoming trips. <a href="{% url 'flight_search' %}">Book a flight</a> to get started!
-            </div>
-            {% endif %}
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
+
+    <!-- Dashboard Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card glass-card text-center border-0 shadow-sm p-3">
+                <div class="card-body">
+                    <i class="bi bi-airplane text-primary mb-2" style="font-size: 2rem;"></i>
+                    <h5 class="card-title text-muted">Total Flights</h5>
+                    <h2 class="fw-bold">{{ stats.total_flights }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card glass-card text-center border-0 shadow-sm p-3">
+                <div class="card-body">
+                    <i class="bi bi-calendar-event text-success mb-2" style="font-size: 2rem;"></i>
+                    <h5 class="card-title text-muted">Upcoming Trips</h5>
+                    <h2 class="fw-bold">{{ stats.upcoming_trips }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card glass-card text-center border-0 shadow-sm p-3">
+                <div class="card-body">
+                    <i class="bi bi-x-circle text-danger mb-2" style="font-size: 2rem;"></i>
+                    <h5 class="card-title text-muted">Cancelled</h5>
+                    <h2 class="fw-bold">{{ stats.cancelled_trips }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card glass-card text-center border-0 shadow-sm p-3">
+                <div class="card-body">
+                    <i class="bi bi-currency-dollar text-warning mb-2" style="font-size: 2rem;"></i>
+                    <h5 class="card-title text-muted">Total Spent</h5>
+                    <h2 class="fw-bold">${{ stats.total_spent|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sidebar Profile -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm border-0 glass-card profile-card">
+                <div class="card-body text-center position-relative">
+                    <div class="position-relative d-inline-block mb-3 group-hover">
+                        <img id="profileImageDisplay" src="{% if profile.profile_picture %}{{ profile.profile_picture.url }}{% else %}{% static 'images/default_avatar.png' %}{% endif %}" class="rounded-circle shadow object-fit-cover" width="150" height="150" alt="Profile" onerror="this.src='https://via.placeholder.com/150'">
+                        
+                        <div class="upload-overlay rounded-circle" onclick="document.getElementById('profile_picture_input').click()">
+                            <i class="bi bi-camera-fill text-white fs-4"></i>
+                        </div>
+                    </div>
+                    <form id="imageUploadForm" class="d-none">
+                        <input type="file" id="profile_picture_input" name="profile_picture" accept="image/*" onchange="uploadImage()">
+                    </form>
+
+                    <h3 id="display_name" class="fw-bold mb-1">{{ user.first_name }} {{ user.last_name }}</h3>
+                    <p id="display_email" class="text-muted mb-2">{{ user.email }}</p>
+                    <p class="badge bg-primary text-wrap mb-3"><i class="bi bi-geo-alt"></i> <span id="display_address">{{ profile.address|default:"No address added" }}</span></p>
+
+                    <hr>
+                    <div class="d-flex justify-content-between text-muted small mb-3">
+                        <span><i class="bi bi-telephone"></i> <span id="display_phone">{{ profile.phone|default:"N/A" }}</span></span>
+                        <span><i class="bi bi-gender-ambiguous"></i> <span id="display_gender">{{ profile.gender|default:"N/A" }}</span></span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                            <i class="bi bi-pencil-square"></i> Edit Profile
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-4 border-0 glass-card">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                    <h5 class="fw-bold"><i class="bi bi-star-fill text-warning"></i> Frequent Flyer</h5>
+                </div>
+                <div class="card-body">
+                    <div class="progress mb-2" style="height: 10px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 65%;"></div>
+                    </div>
+                    <p class="small text-muted mb-0 d-flex justify-content-between">
+                        <span>Silver Status</span>
+                        <span>65% to Gold</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <h4 class="fw-bold mb-3">Recent Bookings & Activity</h4>
+            
+            {% if recent_bookings %}
+                {% for booking in recent_bookings %}
+                <div class="card shadow-sm border-0 mb-3 glass-card hover-lift transition-all">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-2 text-center">
+                                <img src="{% if booking.flight.airline.logo %}{{ booking.flight.airline.logo.url }}{% endif %}" class="img-fluid rounded" style="max-height: 50px;" alt="{{ booking.flight.airline.name }}">
+                            </div>
+                            <div class="col-md-4">
+                                <h5 class="mb-1 fw-bold">{{ booking.flight.departure_airport.city }} <i class="bi bi-arrow-right mx-1"></i> {{ booking.flight.arrival_airport.city }}</h5>
+                                <p class="mb-0 text-muted small">Flight: {{ booking.flight.airline.code }}{{ booking.flight.flight_number }}</p>
+                                <p class="mb-0 text-muted small">{{ booking.flight.departure_time|date:"M d, Y H:i" }}</p>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <span class="badge rounded-pill bg-{% if booking.status == 'CONFIRMED' %}success{% elif booking.status == 'CANCELLED' %}danger{% else %}warning{% endif %} px-3 py-2">
+                                    {{ booking.status }}
+                                </span>
+                                <p class="mt-2 mb-0 fw-bold text-primary">${{ booking.total_price }}</p>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <a href="{% url 'booking_detail' booking.reference %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                <div class="text-center mt-3">
+                    <a href="{% url 'my_bookings' %}" class="btn btn-light rounded-pill px-4 shadow-sm">View All Bookings</a>
+                </div>
+            {% else %}
+                <div class="alert alert-info border-0 shadow-sm rounded-3">
+                    <i class="bi bi-info-circle me-2"></i> No recent bookings found. <a href="{% url 'flight_search' %}" class="alert-link">Book your first flight!</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light border-0">
+                <h5 class="modal-title fw-bold">Update Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="profileUpdateForm">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-control bg-light border-0" id="first_name" name="first_name" value="{{ user.first_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-control bg-light border-0" id="last_name" name="last_name" value="{{ user.last_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-control bg-light border-0" id="email" name="email" value="{{ user.email }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone Number</label>
+                            <input type="text" class="form-control bg-light border-0" id="phone" name="phone" value="{{ profile.phone }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Gender</label>
+                            <select class="form-select bg-light border-0" id="gender" name="gender">
+                                <option value="">Select</option>
+                                <option value="Male" {% if profile.gender == 'Male' %}selected{% endif %}>Male</option>
+                                <option value="Female" {% if profile.gender == 'Female' %}selected{% endif %}>Female</option>
+                                <option value="Other" {% if profile.gender == 'Other' %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Date of Birth</label>
+                            <input type="date" class="form-control bg-light border-0" id="dob" name="dob" value="{{ profile.dob|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Address</label>
+                            <input type="text" class="form-control bg-light border-0" id="address" name="address" value="{{ profile.address }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Bio</label>
+                            <textarea class="form-control bg-light border-0" id="bio" name="bio" rows="3">{{ profile.bio }}</textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 bg-light">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4" id="saveProfileBtn" onclick="submitProfile()">
+                    <span id="saveProfileText">Save Changes</span>
+                    <span id="saveProfileSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block styles %}
-  <style>
-    .profile-avatar {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      background-color: #f8f9fa;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto;
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
     }
-    .card {
-      border: none;
-      border-radius: 10px;
-      overflow: hidden;
+    .hover-lift {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
-    .card-header {
-      border-bottom: 1px solid rgba(0,0,0,.125);
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
     }
-    .list-group-item {
-      border-left: none;
-      border-right: none;
+    .upload-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s;
+        cursor: pointer;
     }
-  </style>
+    .group-hover:hover .upload-overlay {
+        opacity: 1;
+    }
+    .object-fit-cover {
+        object-fit: cover;
+    }
+</style>
 {% endblock %}
 
-<!-- Edit Profile Modal -->
-<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title" id="editProfileModalLabel">Edit Profile</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form method="POST">
-        <div class="modal-body">
-          {% csrf_token %}
-          <div class="mb-3">
-            <label for="first_name" class="form-label">First Name</label>
-            <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name }}">
-          </div>
-          <div class="mb-3">
-            <label for="last_name" class="form-label">Last Name</label>
-            <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name }}">
-          </div>
-          <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Changes</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
+{% block scripts %}
+<script>
+    function showToast(message, type='success') {
+        const toastEl = document.getElementById('liveToast');
+        document.getElementById('toastMessage').textContent = message;
+        toastEl.className = `toast align-items-center text-white bg-${type} border-0`;
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    }
+
+    function uploadImage() {
+        const input = document.getElementById('profile_picture_input');
+        if (input.files && input.files[0]) {
+            // Preview instantly
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('profileImageDisplay').src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
+
+            // Upload via AJAX
+            const formData = new FormData();
+            formData.append('profile_picture', input.files[0]);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+            fetch("{% url 'update_profile' %}", {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    showToast('Profile image updated!');
+                } else {
+                    showToast('Failed to update image', 'danger');
+                }
+            })
+            .catch(error => {
+                showToast('Error uploading image', 'danger');
+            });
+        }
+    }
+
+    function submitProfile() {
+        const btn = document.getElementById('saveProfileBtn');
+        const spinner = document.getElementById('saveProfileSpinner');
+        const text = document.getElementById('saveProfileText');
+        const form = document.getElementById('profileUpdateForm');
+        
+        btn.disabled = true;
+        text.classList.add('d-none');
+        spinner.classList.remove('d-none');
+
+        const formData = new FormData(form);
+        
+        fetch("{% url 'update_profile' %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                // Update DOM dynamically
+                document.getElementById('display_name').textContent = `${data.data.first_name} ${data.data.last_name}`;
+                document.getElementById('display_email').textContent = data.data.email;
+                document.getElementById('display_phone').textContent = data.data.phone || 'N/A';
+                document.getElementById('display_address').textContent = data.data.address || 'No address added';
+                document.getElementById('display_gender').textContent = data.data.gender || 'N/A';
+                
+                // Hide modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editProfileModal'));
+                modal.hide();
+                
+                showToast(data.message);
+            } else {
+                showToast(data.message || 'Error updating profile', 'danger');
+            }
+        })
+        .catch(error => {
+            showToast('Network error occurred', 'danger');
+        })
+        .finally(() => {
+            btn.disabled = false;
+            text.classList.remove('d-none');
+            spinner.classList.add('d-none');
+        });
+    }
+</script>
+{% endblock %}

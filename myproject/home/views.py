@@ -89,7 +89,7 @@ def book_flight(request, flight_id):
     flight = get_object_or_404(Flight, pk=flight_id)
     
     if request.method == 'POST':
-        passengers = int(request.POST.get('passengers', 1))
+        passengers = int(request.POST.get('total_passengers', 1))
         travel_class = request.POST.get('travel_class')
         
         # Validate passenger data first
@@ -340,11 +340,163 @@ def register_view(request):
     
     return render(request, 'register.html', {'form': form})
 
+from django.http import JsonResponse
+from .models import UserProfile
+
 @login_required
 def profile_view(request):
     user = request.user
-    bookings = Booking.objects.filter(user=user).order_by('-booking_date')[:5]
+    profile, created = UserProfile.objects.get_or_create(user=user)
+    bookings = Booking.objects.filter(user=user).select_related('flight__airline', 'flight__departure_airport', 'flight__arrival_airport').order_by('-booking_date')
+    
+    # Dashboard Stats
+    total_flights = bookings.count()
+    upcoming_trips = bookings.filter(status='CONFIRMED', flight__departure_time__gt=datetime.now()).count()
+    cancelled_trips = bookings.filter(status='CANCELLED').count()
+    total_spent = sum([b.total_price for b in bookings if b.status == 'CONFIRMED'])
+    
     return render(request, 'profile.html', {
         'user': user,
-        'recent_bookings': bookings
+        'profile': profile,
+        'recent_bookings': bookings[:5],
+        'stats': {
+            'total_flights': total_flights,
+            'upcoming_trips': upcoming_trips,
+            'cancelled_trips': cancelled_trips,
+            'total_spent': total_spent,
+        }
+    })
+
+@login_required
+def update_profile(request):
+    if request.method == 'POST':
+        user = request.user
+        profile, created = UserProfile.objects.get_or_create(user=user)
+        
+        # Update User fields
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
+        user.email = request.POST.get('email', user.email)
+        user.save()
+        
+        # Update Profile fields
+        profile.phone = request.POST.get('phone', profile.phone)
+        profile.address = request.POST.get('address', profile.address)
+        profile.bio = request.POST.get('bio', profile.bio)
+        profile.gender = request.POST.get('gender', profile.gender)
+        
+        dob = request.POST.get('dob')
+        if dob:
+            try:
+                profile.dob = datetime.strptime(dob, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+                
+        # Handle Image Upload
+        if 'profile_picture' in request.FILES:
+            profile.profile_picture = request.FILES['profile_picture']
+            
+        profile.save()
+        
+        profile_pic_url = profile.profile_picture.url if profile.profile_picture else ''
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Profile updated successfully',
+            'data': {
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+                'phone': profile.phone,
+                'address': profile.address,
+                'bio': profile.bio,
+                'gender': profile.gender,
+                'dob': profile.dob.strftime('%Y-%m-%d') if profile.dob else '',
+                'profile_picture': profile_pic_url
+            }
+        })
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Sum, Count, F
+from django.utils import timezone
+
+@staff_member_required
+def admin_dashboard_api(request):
+    """API endpoint to feed live data to the custom admin dashboard."""
+    # Basic Counters
+    total_flights = Flight.objects.count()
+    active_flights = Flight.objects.filter(departure_time__gte=timezone.now()).count()
+    total_bookings = Booking.objects.count()
+    total_users = User.objects.count()
+    total_cancellations = Booking.objects.filter(status='CANCELLED').count()
+    
+    # Revenue calculations
+    total_revenue = Booking.objects.filter(status='CONFIRMED').aggregate(Sum('total_price'))['total_price__sum'] or 0
+    pending_payments = Payment.objects.filter(status='PENDING').count()
+    
+    # Top Performing Flight
+    top_flight = Flight.objects.annotate(
+        num_bookings=Count('booking'),
+        total_revenue=Sum('booking__total_price')
+    ).order_by('-num_bookings').first()
+    
+    top_flight_data = None
+    if top_flight:
+        total_capacity = top_flight.economy_seats + top_flight.business_seats + top_flight.first_class_seats
+        # Calculate occupancy (booked passengers / total capacity)
+        booked_passengers = Booking.objects.filter(flight=top_flight, status='CONFIRMED').aggregate(Sum('nums_passengers'))['nums_passengers__sum'] or 0
+        occupancy = int((booked_passengers / total_capacity) * 100) if total_capacity > 0 else 0
+        
+        top_flight_data = {
+            'code': f"{top_flight.airline.code}{top_flight.flight_number}",
+            'route': f"{top_flight.departure_airport.city} → {top_flight.arrival_airport.city}",
+            'bookings': top_flight.num_bookings,
+            'revenue': float(top_flight.total_revenue or 0),
+            'occupancy': occupancy
+        }
+        
+    # Low Seat Flights (Sum of all seats <= 20)
+    # Using annotation to sum available seats
+    low_seat_flights_query = Flight.objects.annotate(
+        total_available=F('economy_seats') + F('business_seats') + F('first_class_seats')
+    ).filter(total_available__lte=20, departure_time__gte=timezone.now()).order_by('total_available')[:5]
+    
+    low_seat_flights = []
+    for flight in low_seat_flights_query:
+        low_seat_flights.append({
+            'code': f"{flight.airline.code}{flight.flight_number}",
+            'route': f"{flight.departure_airport.city} → {flight.arrival_airport.city}",
+            'seats': flight.total_available,
+            'id': flight.id
+        })
+        
+    # Chart Data (Mock trend for last 7 days for simplicity, but could be real)
+    today = timezone.now().date()
+    dates = [(today - timedelta(days=i)) for i in range(6, -1, -1)]
+    revenue_chart_data = []
+    bookings_chart_data = []
+    
+    for d in dates:
+        day_bookings = Booking.objects.filter(booking_date__date=d, status='CONFIRMED')
+        revenue_chart_data.append(float(day_bookings.aggregate(Sum('total_price'))['total_price__sum'] or 0))
+        bookings_chart_data.append(day_bookings.count())
+
+    return JsonResponse({
+        'stats': {
+            'total_flights': total_flights,
+            'active_flights': active_flights,
+            'total_bookings': total_bookings,
+            'total_users': total_users,
+            'total_revenue': float(total_revenue),
+            'pending_payments': pending_payments,
+            'total_cancellations': total_cancellations,
+        },
+        'top_flight': top_flight_data,
+        'low_seat_flights': low_seat_flights,
+        'charts': {
+            'labels': [d.strftime('%b %d') for d in dates],
+            'revenue': revenue_chart_data,
+            'bookings': bookings_chart_data
+        }
     })

@@ -20,9 +20,15 @@
                                     <p class="mb-1"><strong>Flight:</strong> {{ booking.flight.airline.code }}{{ booking.flight.flight_number }}</p>
                                     <p class="mb-1"><strong>Departure:</strong> {{ booking.flight.departure_time|date:"M d, Y" }} at {{ booking.flight.departure_time|time }}</p>
                                     <p class="mb-1"><strong>Passengers ({{ booking.nums_passengers }}):</strong></p>
-                                    <ul class="mb-1">
+                                    <ul class="mb-2 list-unstyled">
                                         {% for passenger in passengers %}
-                                        <li>{{ passenger.first_name }} {{ passenger.last_name }}</li>
+                                        <li class="mb-2 pb-2 border-bottom">
+                                            <strong>{{ passenger.first_name }} {{ passenger.last_name }}</strong><br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-calendar"></i> DOB: {{ passenger.date_of_birth|date:"M d, Y" }} | 
+                                                <i class="bi bi-person-badge"></i> {{ passenger.get_id_type_display }}: {{ passenger.id_number }}
+                                            </small>
+                                        </li>
                                         {% endfor %}
                                     </ul>
                                     <p class="mb-1"><strong>Class:</strong> {{ booking.travel_class }}</p>

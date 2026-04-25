@@ -22,6 +22,8 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('register/', views.register_view, name='register'),
     path('profile/', views.profile_view, name='profile'),
+    path('profile/update/', views.update_profile, name='update_profile'),
+    path('admin-api/', views.admin_dashboard_api, name='admin_dashboard_api'),
     
     # User account
     path('my-bookings/', views.my_bookings, name='my_bookings'),

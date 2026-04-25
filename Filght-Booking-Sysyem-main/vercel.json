@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "myproject/wsgi.py",
+      "src": "Filght-Booking-Sysyem-main/myproject/wsgi.py",
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "50mb",
@@ -18,7 +18,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "myproject/wsgi.py"
+      "dest": "Filght-Booking-Sysyem-main/myproject/wsgi.py"
     }
   ],
   "env": {

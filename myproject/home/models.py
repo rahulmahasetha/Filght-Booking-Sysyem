@@ -6,6 +6,18 @@ from django.core.validators import MinValueValidator
 import random
 # Create your models here.
 
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    phone = models.CharField(max_length=20, blank=True)
+    address = models.TextField(blank=True)
+    bio = models.TextField(blank=True)
+    gender = models.CharField(max_length=10, blank=True)
+    dob = models.DateField(null=True, blank=True)
+    profile_picture = models.ImageField(upload_to='profiles/', null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s Profile"
+
 class Contact(models.Model):
     name = models.CharField(max_length=100)
     email = models.CharField(max_length=100)
@@ -58,6 +70,40 @@ class Flight(models.Model):
         minutes = int((total_seconds % 3600) // 60)
         return timedelta(hours=hours, minutes=minutes)
     
+    @property
+    def current_economy_price(self):
+        return self._calculate_dynamic_price(self.economy_price, self.economy_seats)
+        
+    @property
+    def current_business_price(self):
+        return self._calculate_dynamic_price(self.business_price, self.business_seats)
+        
+    @property
+    def current_first_class_price(self):
+        return self._calculate_dynamic_price(self.first_class_price, self.first_class_seats)
+
+    def _calculate_dynamic_price(self, base_price, available_seats):
+        """Dynamic Pricing Logic: Surge price if few seats left, discount if plenty, surge if close to departure."""
+        if not base_price:
+            return Decimal('0.00')
+            
+        price_multiplier = Decimal('1.00')
+        
+        # Seat availability surge
+        if available_seats <= 10:
+            price_multiplier += Decimal('0.20')  # 20% surge
+        elif available_seats > 100:
+            price_multiplier -= Decimal('0.10')  # 10% discount
+            
+        # Time remaining surge
+        # Note: timezone-naive datetime comparison could cause warnings, using naive to match existing code
+        from django.utils import timezone
+        time_left = self.departure_time - timezone.now()
+        if time_left.days <= 2 and time_left.days >= 0:
+            price_multiplier += Decimal('0.15')  # Last minute 15% surge
+            
+        return round(base_price * price_multiplier, 2)
+
     def duration_display(self):
         """Formatted duration string"""
         delta = self.duration
@@ -113,11 +159,11 @@ class Booking(models.Model):
             return Decimal('0.00')
         
         if self.travel_class == 'ECONOMY':
-            return self.flight.economy_price or Decimal('0.00')
+            return self.flight.current_economy_price
         elif self.travel_class == 'BUSINESS':
-            return self.flight.business_price or Decimal('0.00')
+            return self.flight.current_business_price
         elif self.travel_class == 'FIRST':
-            return self.flight.first_class_price or Decimal('0.00')
+            return self.flight.current_first_class_price
         return Decimal('0.00')
 
     

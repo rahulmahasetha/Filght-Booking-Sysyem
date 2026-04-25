@@ -16,7 +16,11 @@
           </div>
           <div class="card-body">
             <h6>Price Range</h6>
-            <input type="range" class="form-range mb-3" min="0" max="2000" step="50">
+            <div class="d-flex justify-content-between">
+              <span>$0</span>
+              <span id="priceValue" class="fw-bold">$3000</span>
+            </div>
+            <input type="range" class="form-range mb-3" min="0" max="3000" step="50" id="priceRange" value="3000">
             
             <h6>Airlines</h6>
             <div class="form-check">
@@ -35,7 +39,7 @@
       
       <div class="col-md-8">
         {% for flight in flights %}
-        <div class="card mb-3 flight-card">
+        <div class="card mb-3 flight-card" data-price="{% if search_data.class == 'ECONOMY' %}{{ flight.economy_price }}{% elif search_data.class == 'BUSINESS' %}{{ flight.business_price }}{% else %}{{ flight.first_class_price }}{% endif %}" data-airline="{{ flight.airline.id }}">
           <div class="card-body">
             <div class="row">
               <div class="col-md-2 text-center">
@@ -78,4 +82,57 @@
     </div>
   {% endif %}
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const priceRange = document.getElementById('priceRange');
+    const priceValue = document.getElementById('priceValue');
+    const allAirlinesCheckbox = document.getElementById('allAirlines');
+    const airlineCheckboxes = document.querySelectorAll('.airline-filter');
+    const flightCards = document.querySelectorAll('.flight-card');
+
+    function filterFlights() {
+      const maxPrice = parseFloat(priceRange.value);
+      priceValue.textContent = '$' + maxPrice;
+      
+      const isAllAirlines = allAirlinesCheckbox.checked;
+      const selectedAirlines = Array.from(airlineCheckboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.id.replace('airline', ''));
+
+      flightCards.forEach(card => {
+        const price = parseFloat(card.getAttribute('data-price'));
+        const airline = card.getAttribute('data-airline');
+        
+        let show = true;
+        if (price > maxPrice) show = false;
+        if (!isAllAirlines && !selectedAirlines.includes(airline)) show = false;
+        
+        card.style.display = show ? 'block' : 'none';
+      });
+    }
+
+    priceRange.addEventListener('input', filterFlights);
+    
+    allAirlinesCheckbox.addEventListener('change', function() {
+      if (this.checked) {
+        airlineCheckboxes.forEach(cb => cb.checked = true);
+      } else {
+        airlineCheckboxes.forEach(cb => cb.checked = false);
+      }
+      filterFlights();
+    });
+
+    airlineCheckboxes.forEach(cb => {
+      cb.addEventListener('change', function() {
+        const allChecked = Array.from(airlineCheckboxes).every(c => c.checked);
+        allAirlinesCheckbox.checked = allChecked;
+        filterFlights();
+      });
+    });
+    
+    // Initial filter run
+    filterFlights();
+  });
+</script>
 {% endblock %}
