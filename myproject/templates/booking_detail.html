@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block title %}Booking Confirmation #{{ booking.reference }}{% endblock %}
 
@@ -122,9 +122,9 @@
                         </div>
                         <div class="col-md-6">
                             <p class="mb-2"><strong>Payment Method:</strong> Credit Card</p>
-                            <p class="mb-2"><strong>Price per passenger:</strong> ${{ price_breakdown.per_passenger }}</p>
+                            <p class="mb-2"><strong>Price per passenger:</strong> ₹{{ price_breakdown.per_passenger }}</p>
                             <p class="mb-2"><strong>Total Passengers:</strong> {{ price_breakdown.passenger_count }}</p>
-                            <h5 class="mt-3"><strong>Amount Paid:</strong> <span class="text-success">${{ booking.total_price }}</span></h5>
+                            <h5 class="mt-3"><strong>Amount Paid:</strong> <span class="text-success">₹{{ booking.total_price }}</span></h5>
                         </div>
                     </div>
                 </div>

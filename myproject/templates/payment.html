@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block title %}Payment - Flight Booking{% endblock %}
 
@@ -43,21 +43,28 @@
                                     <table class="table table-sm">
                                         <!-- Show base fare calculation -->
                                         <tr>
-                                            <td>Base Fare ({{ booking.nums_passengers }} × ${{ booking.per_passenger_price|floatformat:2 }}):</td>
-                                            <td class="text-end">${{ booking.total_price|floatformat:2 }}</td>
+                                            <td>Base Fare ({{ booking.nums_passengers }} × ₹{{ booking.per_passenger_price|floatformat:2 }}):</td>
+                                            <td class="text-end">₹{{ booking.total_price|floatformat:2 }}</td>
                                         </tr>
                                         
                                         <!-- Show breakdown per passenger -->
                                         {% for i in "x"|rjust:booking.nums_passengers %}
                                         <tr>
                                             <td>Passenger {{ forloop.counter }} Fare:</td>
-                                            <td class="text-end">${{ booking.per_passenger_price|floatformat:2 }}</td>
+                                            <td class="text-end">₹{{ booking.per_passenger_price|floatformat:2 }}</td>
                                         </tr>
                                         {% endfor %}
                                         
+                                        {% if discount %}
+                                        <tr class="text-success">
+                                            <td>Discount (First Booking):</td>
+                                            <td class="text-end">-₹{{ discount|floatformat:2 }}</td>
+                                        </tr>
+                                        {% endif %}
+                                        
                                         <tr class="table-active fw-bold">
                                             <td>Total Amount:</td>
-                                            <td class="text-end">${{ booking.total_price|floatformat:2 }}</td>
+                                            <td class="text-end" id="final-amount">₹{{ final_price|default:booking.total_price|floatformat:2 }}</td>
                                         </tr>
                                     </table>
                                     
@@ -75,6 +82,19 @@
 
                     <form method="POST" id="payment-form">
                         {% csrf_token %}
+                        
+                        <!-- Coupon Code Section -->
+                        <div class="card mb-4 border-success">
+                            <div class="card-body">
+                                <h5 class="card-title text-success"><i class="bi bi-tag-fill"></i> Have a Coupon₹</h5>
+                                <div class="input-group">
+                                    <input type="text" name="coupon_code" class="form-control" placeholder="Enter coupon code" id="coupon-input" value="{{ coupon_applied|default:'' }}">
+                                    <button class="btn btn-outline-success" type="submit" name="apply_coupon" value="1">Apply</button>
+                                </div>
+                                <small class="text-muted mt-1 d-block">Use <strong>UDAAAN</strong> for 100% off on your 1st booking!</small>
+                            </div>
+                        </div>
+
                         <h5 class="mb-3">Payment Method</h5>
                         
                         <div class="mb-4">
@@ -88,19 +108,19 @@
                                 <div class="row g-3">
                                     <div class="col-md-12">
                                         <label for="card-number" class="form-label">Card Number</label>
-                                        <input type="text" class="form-control" id="card-number" placeholder="1234 5678 9012 3456" required>
+                                        <input type="text" class="form-control" id="card-number" placeholder="1234 5678 9012 3456">
                                     </div>
                                     <div class="col-md-6">
                                         <label for="card-name" class="form-label">Name on Card</label>
-                                        <input type="text" class="form-control" id="card-name" placeholder="John Doe" required>
+                                        <input type="text" class="form-control" id="card-name" placeholder="John Doe">
                                     </div>
                                     <div class="col-md-3">
                                         <label for="card-expiry" class="form-label">Expiry Date</label>
-                                        <input type="text" class="form-control" id="card-expiry" placeholder="MM/YY" required>
+                                        <input type="text" class="form-control" id="card-expiry" placeholder="MM/YY">
                                     </div>
                                     <div class="col-md-3">
                                         <label for="card-cvv" class="form-label">CVV</label>
-                                        <input type="text" class="form-control" id="card-cvv" placeholder="123" required>
+                                        <input type="text" class="form-control" id="card-cvv" placeholder="123">
                                     </div>
                                 </div>
                             </div>
@@ -116,8 +136,8 @@
                         </div>
 
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="bi bi-lock-fill"></i> Pay ${{ booking.total_price|floatformat:2 }}
+                            <button type="submit" name="complete_payment" value="1" class="btn btn-primary btn-lg">
+                                <i class="bi bi-lock-fill"></i> Pay ₹{{ final_price|default:booking.total_price|floatformat:2 }}
                             </button>
                             <a href="{% url 'booking_detail' booking.reference %}" class="btn btn-outline-secondary">
                                 Back to Booking Details

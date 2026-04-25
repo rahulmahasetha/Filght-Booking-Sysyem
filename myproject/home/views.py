@@ -209,26 +209,70 @@ def payment(request, booking_id):
         'total': booking.total_price,
         'passenger_count': booking.nums_passengers
     }
-    if request.method == 'POST':
-        if Payment.objects.filter(booking=booking).exists():
-            messages.info(request, "Payment already completed")
-            return redirect('booking_detail', reference=booking.reference)
+    final_price = booking.total_price
+    discount = 0
+    coupon_applied = None
 
-        payment = Payment.objects.create(
-            booking=booking,
-            amount=booking.total_price,  # Use the stored total price
-            transaction_id=f"TX{random.randint(100000000, 999999999)}",
-            status='COMPLETED'
-        )
-        
-        messages.success(request, "Payment successful!")
-        return redirect('booking_detail', reference=booking.reference)
+    if request.method == 'POST':
+        if 'apply_coupon' in request.POST:
+            coupon_code = request.POST.get('coupon_code', '').strip().upper()
+            if coupon_code == 'UDAAAN':
+                # Check if this is the user's first booking (no other completed payments)
+                previous_payments = Payment.objects.filter(booking__user=request.user, status='COMPLETED').exists()
+                if not previous_payments:
+                    discount = booking.total_price
+                    final_price = 0
+                    coupon_applied = 'UDAAAN'
+                    messages.success(request, "Coupon applied! 100% discount for your first booking.")
+                else:
+                    messages.error(request, "The coupon UDAAAN is only valid for your first booking.")
+            else:
+                messages.error(request, "Invalid coupon code.")
+            
+            return render(request, 'payment.html', {
+                'booking': booking,
+                'passengers': passengers,
+                'price_breakdown': price_breakdown,
+                'final_price': final_price,
+                'discount': discount,
+                'coupon_applied': coupon_applied,
+                'stripe_public_key': settings.STRIPE_PUBLIC_KEY
+            })
+
+        if 'complete_payment' in request.POST:
+            if Payment.objects.filter(booking=booking).exists():
+                messages.info(request, "Payment already completed")
+                return redirect('booking_detail', reference=booking.reference)
+
+            # Re-verify coupon if it was passed during final payment submission
+            coupon_code = request.POST.get('coupon_code', '').strip().upper()
+            payment_amount = booking.total_price
+            
+            if coupon_code == 'UDAAAN':
+                previous_payments = Payment.objects.filter(booking__user=request.user, status='COMPLETED').exists()
+                if not previous_payments:
+                    payment_amount = 0
+
+            payment = Payment.objects.create(
+                booking=booking,
+                amount=payment_amount,
+                transaction_id=f"TX{random.randint(100000000, 999999999)}",
+                status='COMPLETED'
+            )
+            
+            # If 100% discount, update booking price to 0 too for consistency?
+            # Actually, keeping total_price as base and amount as paid is fine.
+            
+            messages.success(request, "Payment successful!")
+            return redirect('booking_detail', reference=booking.reference)
     
     return render(request, 'payment.html', {
         'booking': booking,
         'passengers': passengers,
         'price_breakdown': price_breakdown,
-
+        'final_price': final_price,
+        'discount': discount,
+        'coupon_applied': coupon_applied,
         'stripe_public_key': settings.STRIPE_PUBLIC_KEY
     })
 @login_required

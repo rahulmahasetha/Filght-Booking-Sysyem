@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block title %}My Bookings{% endblock %}
 
@@ -41,7 +41,7 @@
                     </td>
                     <td>{{ booking.flight.departure_time|date:"M d, Y" }}</td>
                     <td>{{ booking.travel_class }}</td>
-                    <td>${{ booking.total_price }}</td>
+                    <td>₹{{ booking.total_price }}</td>
                     <td>
                         <span class="badge bg-{% if booking.status == 'CONFIRMED' %}success{% else %}danger{% endif %}">
                             {{ booking.status }}

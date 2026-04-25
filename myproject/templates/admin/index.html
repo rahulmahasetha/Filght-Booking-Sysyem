@@ -1,4 +1,4 @@
-{% extends "admin/base_site.html" %}
+﻿{% extends "admin/base_site.html" %}
 {% load i18n static %}
 
 {% block extrastyle %}
@@ -175,7 +175,7 @@
             .then(res => res.json())
             .then(data => {
                 // Update stats
-                document.getElementById('stat-revenue').textContent = '$' + data.stats.total_revenue.toLocaleString();
+                document.getElementById('stat-revenue').textContent = '₹' + data.stats.total_revenue.toLocaleString();
                 document.getElementById('stat-bookings').textContent = data.stats.total_bookings.toLocaleString();
                 document.getElementById('stat-active-flights').textContent = data.stats.active_flights.toLocaleString();
                 document.getElementById('stat-users').textContent = data.stats.total_users.toLocaleString();

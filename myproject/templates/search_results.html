@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block title %}Flight Results{% endblock %}
 {% load static %}
@@ -17,8 +17,8 @@
           <div class="card-body">
             <h6>Price Range</h6>
             <div class="d-flex justify-content-between">
-              <span>$0</span>
-              <span id="priceValue" class="fw-bold">$3000</span>
+              <span>₹0</span>
+              <span id="priceValue" class="fw-bold">₹3000</span>
             </div>
             <input type="range" class="form-range mb-3" min="0" max="3000" step="50" id="priceRange" value="3000">
             
@@ -61,11 +61,11 @@
               <div class="col-md-2 text-end">
                 <h4 class="text-primary">
                   {% if search_data.class == 'ECONOMY' %}
-                    ${{ flight.economy_price }}
+                    ₹{{ flight.economy_price }}
                   {% elif search_data.class == 'BUSINESS' %}
-                    ${{ flight.business_price }}
+                    ₹{{ flight.business_price }}
                   {% else %}
-                    ${{ flight.first_class_price }}
+                    ₹{{ flight.first_class_price }}
                   {% endif %}
                 </h4>
                 <a href="{% url 'book_flight' flight.id %}?passengers={{ search_data.passengers }}&class={{ search_data.class }}" class="btn btn-sm btn-primary">Select</a>
@@ -93,7 +93,7 @@
 
     function filterFlights() {
       const maxPrice = parseFloat(priceRange.value);
-      priceValue.textContent = '$' + maxPrice;
+      priceValue.textContent = '₹' + maxPrice;
       
       const isAllAirlines = allAirlinesCheckbox.checked;
       const selectedAirlines = Array.from(airlineCheckboxes)
@@ -108,7 +108,7 @@
         if (price > maxPrice) show = false;
         if (!isAllAirlines && !selectedAirlines.includes(airline)) show = false;
         
-        card.style.display = show ? 'block' : 'none';
+        card.style.display = show ₹ 'block' : 'none';
       });
     }
 
