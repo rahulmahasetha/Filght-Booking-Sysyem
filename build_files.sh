@@ -19,4 +19,7 @@ python manage.py migrate --noinput
 echo "==> Seeding the database..."
 python load_db.py
 
+echo "==> Creating admin user..."
+python create_superuser.py
+
 echo "==> Build complete!"
