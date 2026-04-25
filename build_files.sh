@@ -4,7 +4,7 @@
 # This runs during the Vercel build phase
 
 echo "==> Installing Python dependencies..."
-pip install -r requirements.txt
+python -m pip install -r requirements.txt --break-system-packages
 
 echo "==> Collecting static files..."
 cd myproject
