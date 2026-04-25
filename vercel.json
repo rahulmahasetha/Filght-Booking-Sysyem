@@ -20,11 +20,11 @@
   "routes": [
     {
       "src": "/static/(.*)",
-      "dest": "/myproject/staticfiles/$1"
+      "dest": "/$1"
     },
     {
       "src": "/media/(.*)",
-      "dest": "/myproject/staticfiles/media/$1"
+      "dest": "/media/$1"
     },
     {
       "src": "/(.*)",
