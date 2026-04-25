@@ -73,7 +73,8 @@
                         <input type="file" id="profile_picture_input" name="profile_picture" accept="image/*" onchange="uploadImage()">
                     </form>
 
-                    <h3 id="display_name" class="fw-bold mb-1">{{ user.first_name }} {{ user.last_name }}</h3>
+                    <h3 id="display_name" class="fw-bold mb-0">{{ user.first_name }} {{ user.last_name }}</h3>
+                    <p class="text-primary small mb-2">@{{ user.username }}</p>
                     <p id="display_email" class="text-muted mb-2">{{ user.email }}</p>
                     <p class="badge bg-primary text-wrap mb-3"><i class="bi bi-geo-alt"></i> <span id="display_address">{{ profile.address|default:"No address added" }}</span></p>
 
@@ -161,6 +162,10 @@
                 <form id="profileUpdateForm">
                     {% csrf_token %}
                     <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small text-muted text-uppercase fw-bold">Username</label>
+                            <input type="text" class="form-control bg-light border-0" value="{{ user.username }}" readonly disabled>
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label">First Name</label>
                             <input type="text" class="form-control bg-light border-0" id="first_name" name="first_name" value="{{ user.first_name }}">
