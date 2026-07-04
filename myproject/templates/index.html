@@ -1,279 +1,822 @@
-﻿{% extends 'base.html' %}
-
+{% extends 'base.html' %}
 {% block title %}Home{% endblock %}
 
-{% block body %}
+{% block styles %}
 <style>
+  /* ── Hero ── */
   .hero-section {
-    background: url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') no-repeat center center;
-    background-size: cover;
-    height: 85vh;
     position: relative;
+    min-height: 92vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background: #0a0f1e;
   }
-  .hero-overlay {
+
+  .hero-bg {
     position: absolute;
-    top: 0;
+    inset: 0;
+    background: url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+    opacity: 0.25;
+  }
+
+  .hero-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(10, 15, 30, 0.97) 0%, rgba(15, 30, 70, 0.85) 50%, rgba(37, 99, 235, 0.4) 100%);
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(37, 99, 235, 0.15);
+    border: 1px solid rgba(37, 99, 235, 0.3);
+    color: #60a5fa;
+    padding: 6px 16px;
+    border-radius: 99px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    backdrop-filter: blur(8px);
+  }
+
+  .hero-badge .dot {
+    width: 6px;
+    height: 6px;
+    background: #60a5fa;
+    border-radius: 50%;
+    animation: pulse-dot 2s infinite;
+  }
+
+  @keyframes pulse-dot {
+
+    0%,
+    100% {
+      opacity: 1
+    }
+
+    50% {
+      opacity: 0.3
+    }
+  }
+
+  .hero-title {
+    font-size: clamp(2.8rem, 6vw, 4.5rem);
+    font-weight: 900;
+    line-height: 1.1;
+    color: #fff;
+    letter-spacing: -0.03em;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-title .highlight {
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-subtitle {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.6);
+    max-width: 540px;
+    line-height: 1.8;
+    margin-bottom: 2.5rem;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+  }
+
+  .btn-hero-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: #fff;
+    padding: 16px 32px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 1rem;
+    text-decoration: none;
+    box-shadow: 0 8px 30px rgba(37, 99, 235, 0.4);
+    transition: all 0.3s;
+    border: none;
+  }
+
+  .btn-hero-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(37, 99, 235, 0.55);
+    color: #fff;
+  }
+
+  .btn-hero-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 16px 32px;
+    border-radius: 14px;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    backdrop-filter: blur(8px);
+    transition: all 0.3s;
+  }
+
+  .btn-hero-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+
+  .hero-trust {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .hero-trust-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.82rem;
+    font-weight: 500;
+  }
+
+  .hero-trust-item i {
+    color: #60a5fa;
+  }
+
+  /* Floating cards */
+  .hero-float-card {
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    color: #fff;
+  }
+
+  .hero-float-card .label {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 4px;
+  }
+
+  .hero-float-card .value {
+    font-size: 1.6rem;
+    font-weight: 800;
+  }
+
+  .hero-float-card .sub {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  /* ── Stats ── */
+  .stats-section {
+    background: #fff;
+    padding: 2.5rem 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .stat-item {
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .stat-number {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1;
+  }
+
+  .stat-number span {
+    color: #2563eb;
+  }
+
+  .stat-label {
+    font-size: 0.82rem;
+    color: #64748b;
+    font-weight: 600;
+    margin-top: 6px;
+    letter-spacing: 0.03em;
+  }
+
+  /* ── Section headers ── */
+  .section-label-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #eff6ff;
+    color: #2563eb;
+    padding: 6px 14px;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+  }
+
+  .section-subtitle {
+    color: #64748b;
+    font-size: 1rem;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  /* ── Destination Cards ── */
+  .dest-card {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    cursor: pointer;
+    display: block;
+    text-decoration: none;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dest-card:hover {
+    transform: translateY(-8px);
+  }
+
+  .dest-card img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.5s;
+  }
+
+  .dest-card:hover img {
+    transform: scale(1.07);
+  }
+
+  .dest-card-overlay {
+    position: absolute;
+    bottom: 0;
     left: 0;
     right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, transparent 100%);
+    padding: 1.5rem 1.25rem 1.25rem;
   }
-  .flight-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: none;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+
+  .dest-city {
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 800;
   }
-  .flight-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+
+  .dest-country {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.78rem;
+    font-weight: 500;
   }
-  .destination-badge {
+
+  .dest-price {
+    color: #fbbf24;
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+
+  .dest-flights-badge {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(0,0,0,0.7);
-    color: white;
-    padding: 3px 8px;
+    top: 14px;
+    right: 14px;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 99px;
+  }
+
+  /* ── Features ── */
+  .features-section {
+    background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+  }
+
+  .feature-card {
+    background: #fff;
     border-radius: 20px;
-    font-size: 0.8rem;
+    padding: 2rem;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s;
+    height: 100%;
   }
-  .partner-logo {
-    filter: grayscale(100%);
-    opacity: 0.7;
-    transition: all 0.3s ease;
+
+  .feature-card:hover {
+    box-shadow: 0 16px 48px rgba(37, 99, 235, 0.12);
+    transform: translateY(-4px);
+    border-color: #bfdbfe;
   }
-  .partner-logo:hover {
+
+  .feature-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .feature-icon.blue {
+    background: #eff6ff;
+    color: #2563eb;
+  }
+
+  .feature-icon.purple {
+    background: #f5f3ff;
+    color: #7c3aed;
+  }
+
+  .feature-icon.green {
+    background: #f0fdf4;
+    color: #16a34a;
+  }
+
+  .feature-icon.amber {
+    background: #fffbeb;
+    color: #d97706;
+  }
+
+  .feature-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.5rem;
+  }
+
+  .feature-text {
+    color: #64748b;
+    font-size: 0.875rem;
+    line-height: 1.7;
+  }
+
+  /* ── Partners ── */
+  .partner-wrap {
+    background: #fff;
+    border-radius: 16px;
+    padding: 1.25rem;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+  }
+
+  .partner-wrap:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    transform: translateY(-3px);
+  }
+
+  .partner-wrap img {
+    max-height: 48px;
+    width: auto;
+    filter: grayscale(60%);
+    opacity: 0.75;
+    transition: all 0.3s;
+  }
+
+  .partner-wrap:hover img {
     filter: grayscale(0);
     opacity: 1;
   }
+
+  /* ── CTA ── */
+  .cta-section {
+    background: linear-gradient(135deg, #0f172a 0%, #1e40af 60%, #7c3aed 100%);
+    border-radius: 28px;
+    padding: 4rem 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.25) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  /* Dark Mode Overrides */
+  [data-theme="dark"] .stats-section,
+  [data-theme="dark"] .feature-card,
+  [data-theme="dark"] .partner-wrap {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+  }
+
+  [data-theme="dark"] .features-section,
+  [data-theme="dark"] .py-6,
+  [data-theme="dark"] section[style*="background:#fff"],
+  [data-theme="dark"] section[style*="background:#f8fafc"] {
+    background: #0f172a !important;
+  }
+
+  [data-theme="dark"] .stat-number,
+  [data-theme="dark"] .section-title,
+  [data-theme="dark"] .feature-title {
+    color: #f8fafc !important;
+  }
+
+  [data-theme="dark"] .stat-item {
+    border-right-color: #334155 !important;
+  }
+
+  [data-theme="dark"] .section-label-tag {
+    background: rgba(37, 99, 235, 0.15);
+    color: #60a5fa;
+  }
+
+  [data-theme="dark"] .feature-icon.blue {
+    background: rgba(37, 99, 235, 0.15);
+  }
+
+  [data-theme="dark"] .feature-icon.purple {
+    background: rgba(124, 58, 237, 0.15);
+  }
+
+  [data-theme="dark"] .feature-icon.green {
+    background: rgba(22, 163, 74, 0.15);
+  }
+
+  [data-theme="dark"] .feature-icon.amber {
+    background: rgba(217, 119, 6, 0.15);
+  }
+
+  [data-theme="dark"] .partner-wrap {
+    background: #f8fafc !important;
+    border-color: #334155 !important;
+  }
+
+  [data-theme="dark"] .partner-wrap img {
+    filter: none !important;
+    opacity: 1 !important;
+  }
 </style>
+{% endblock %}
 
-<div class="hero-section">
-  <div class="hero-overlay d-flex align-items-center">
-    <div class="container text-white text-center">
-      <h1 class="display-4 fw-bold mb-3">Book Your Dream Vacation</h1>
-      <p class="lead mb-4">Find the best flight deals to your favorite destinations</p>
-      <a href="{% url 'flight_search' %}" class="btn btn-primary btn-lg px-4 py-2">Search Flights</a>
-    </div>
-  </div>
-</div>
+{% block body %}
 
-<!-- Popular Destinations Section -->
-<div class="container my-5 py-4">
-  <h2 class="text-center mb-5">Popular Destinations</h2>
-  <div class="row">
-    <!-- Paris -->
-    <div class="col-lg-3 col-md-6 mb-4">
-      <div class="card flight-card h-100">
-        <div class="position-relative">
-          <img src="https://images.unsplash.com/photo-1431274172761-fca41d930114?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" class="card-img-top" alt="Paris" style="height: 180px; object-fit: cover;">
-          <span class="destination-badge">42 flights/week</span>
+<!-- ===== HERO ===== -->
+<section class="hero-section">
+  <div class="hero-bg"></div>
+  <div class="hero-gradient"></div>
+  <div class="container hero-content py-5">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-7" data-aos="fade-up">
+        <div class="hero-badge">
+          <span class="dot"></span>
+          Trusted by 500,000+ travelers
         </div>
-        <div class="card-body">
-          <h5 class="card-title">Paris</h5>
-          <p class="card-text text-muted">France</p>
-          <div class="d-flex justify-content-between align-items-center">
-            <span class="text-primary fw-bold">From INR 399</span>
-            <a href="{% url 'flight_search' %}?destination=CDG&destination_name=Paris" class="btn btn-sm btn-outline-primary">View Flights</a>
-          </div>
+        <h1 class="hero-title">
+          Fly Smarter,<br>
+          <span class="highlight">Travel Further</span>
+        </h1>
+        <p class="hero-subtitle">
+          Discover the world with SkyWings. Compare hundreds of airlines, find the best fares, and book in seconds with
+          complete peace of mind.
+        </p>
+        <div class="hero-actions">
+          <a href="{% url 'flight_search' %}" class="btn-hero-primary">
+            <i class="bi bi-search"></i> Search Flights
+          </a>
+          <a href="{% url 'my_bookings' %}" class="btn-hero-secondary">
+            <i class="bi bi-journal-bookmark"></i> My Bookings
+          </a>
         </div>
-      </div>
-    </div>
-
-    <!-- Tokyo -->
-    <div class="col-lg-3 col-md-6 mb-4">
-      <div class="card flight-card h-100">
-        <div class="position-relative">
-          <img src="https://images.unsplash.com/photo-1492571350019-22de08371fd3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" class="card-img-top" alt="Tokyo" style="height: 180px; object-fit: cover;">
-          <span class="destination-badge">28 flights/week</span>
-        </div>
-        <div class="card-body">
-          <h5 class="card-title">Tokyo</h5>
-          <p class="card-text text-muted">Japan</p>
-          <div class="d-flex justify-content-between align-items-center">
-            <span class="text-primary fw-bold">From INR 799</span>
-            <a href="{% url 'flight_search' %}?destination=HND&destination_name=Tokyo" class="btn btn-sm btn-outline-primary">View Flights</a>
-          </div>
+        <div class="hero-trust">
+          <div class="hero-trust-item"><i class="bi bi-shield-check-fill"></i> Secure Payments</div>
+          <div class="hero-trust-item"><i class="bi bi-arrow-clockwise"></i> Free Cancellation</div>
+          <div class="hero-trust-item"><i class="bi bi-tag-fill"></i> Best Price Guarantee</div>
         </div>
       </div>
-    </div>
-
-    <!-- New York -->
-    <div class="col-lg-3 col-md-6 mb-4">
-      <div class="card flight-card h-100">
-        <div class="position-relative">
-          <img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" class="card-img-top" alt="New York" style="height: 180px; object-fit: cover;">
-          <span class="destination-badge">56 flights/week</span>
+      <div class="col-lg-5 d-none d-lg-flex flex-column gap-3">
+        <div class="hero-float-card ms-5">
+          <div class="label">Today's Best Deal</div>
+          <div class="value">₹1,099</div>
+          <div class="sub">Delhi → Mumbai · Non-stop · Economy</div>
         </div>
-        <div class="card-body">
-          <h5 class="card-title">New York</h5>
-          <p class="card-text text-muted">USA</p>
-          <div class="d-flex justify-content-between align-items-center">
-            <span class="text-primary fw-bold">From INR 299</span>
-            <a href="{% url 'flight_search' %}?destination=JFK&destination_name=New+York" class="btn btn-sm btn-outline-primary">View Flights</a>
+        <div class="hero-float-card">
+          <div class="label">Active Bookings</div>
+          <div class="d-flex align-items-center gap-3 mt-1">
+            <div class="value">2.4K+</div>
+            <div class="sub">Passengers in the air<br>right now</div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Dubai -->
-    <div class="col-lg-3 col-md-6 mb-4">
-      <div class="card flight-card h-100">
-        <div class="position-relative">
-          <img src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" class="card-img-top" alt="Dubai" style="height: 180px; object-fit: cover;">
-          <span class="destination-badge">35 flights/week</span>
-        </div>
-        <div class="card-body">
-          <h5 class="card-title">Dubai</h5>
-          <p class="card-text text-muted">UAE</p>
-          <div class="d-flex justify-content-between align-items-center">
-            <span class="text-primary fw-bold">From INR 499</span>
-            <a href="{% url 'flight_search' %}?destination=DXB&destination_name=Dubai" class="btn btn-sm btn-outline-primary">View Flights</a>
-          </div>
-          
-        </div>
-      </div>
-    </div>
-    
-     <!-- Nepal (Kathmandu) -->
-     <div class="col-lg-3 col-md-6 mb-4">
-      <div class="card flight-card h-100">
-        <div class="position-relative">
-          <img src="https://assets.vogue.in/photos/5ce431b2f55c27562ea27f1a/16:9/w_1280,c_limit/featured.2.jpg" class="card-img-top" alt="Kathmandu" style="height: 180px; object-fit: cover;">
-          <span class="destination-badge">18 flights/week</span>
-        </div>
-        <div class="card-body">
-          <h5 class="card-title">Kathmandu</h5>
-          <p class="card-text text-muted">Nepal</p>
-          <div class="d-flex justify-content-between align-items-center">
-            <span class="text-primary fw-bold">From INR 549</span>
-            <a href="{% url 'flight_search' %}?destination=KTM&destination_name=Kathmandu" class="btn btn-sm btn-outline-primary">View Flights</a>
+        <div class="hero-float-card ms-4">
+          <div class="label">Customer Rating</div>
+          <div class="d-flex align-items-center gap-2">
+            <div class="value">4.9</div>
+            <div>
+              <div style="color:#fbbf24; font-size:1rem;">★★★★★</div>
+              <div class="sub">Based on 48,000+ reviews</div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-    <!-- India (Delhi) -->
-    <div class="col-lg-3 col-md-6 mb-4">
-      <div class="card flight-card h-100">
-        <div class="position-relative">
-          <img src="https://images.unsplash.com/photo-1587474260584-136574528ed5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" class="card-img-top" alt="Delhi" style="height: 180px; object-fit: cover;">
-          <span class="destination-badge">32 flights/week</span>
-        </div>
-        <div class="card-body">
-          <h5 class="card-title">Delhi</h5>
-          <p class="card-text text-muted">India</p>
-          <div class="d-flex justify-content-between align-items-center">
-            <span class="text-primary fw-bold">From INR 449</span>
-            <a href="{% url 'flight_search' %}?destination=DEL&destination_name=Delhi" class="btn btn-sm btn-outline-primary">View Flights</a>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- India (Manali) -->
-<div class="col-lg-3 col-md-6 mb-4">
-  <div class="card flight-card h-100">
-    <div class="position-relative">
-      <img src="https://www.justahotels.com/wp-content/uploads/2023/10/Places-To-Visit-in-Manali.jpg" class="card-img-top" alt="Manali" style="height: 180px; object-fit: cover;">
-      <span class="destination-badge">10 flights/week</span>
-    </div>
-    <div class="card-body">
-      <h5 class="card-title">Manali</h5>
-      <p class="card-text text-muted">India</p>
-      <div class="d-flex justify-content-between align-items-center">
-        <span class="text-primary fw-bold">From INR 259</span>
-        <a href="{% url 'flight_search' %}?destination=MAN&destination_name=Manali" class="btn btn-sm btn-outline-primary">View Flights</a>
       </div>
     </div>
   </div>
-</div>
-<!-- India (Darjeeling) -->
-<div class="col-lg-3 col-md-6 mb-4">
-  <div class="card flight-card h-100">
-    <div class="position-relative">
-      <img src="https://th.bing.com/th/id/OIP.r-WibE0AXV2scLnggBwkmwHaEK?rs=1&pid=ImgDetMain" class="card-img-top" alt="Darjeeling" style="height: 180px; object-fit: cover;">
-      <span class="destination-badge">12 flights/week</span>
-    </div>
-    <div class="card-body">
-      <h5 class="card-title">Darjeeling</h5>
-      <p class="card-text text-muted">India</p>
-      <div class="d-flex justify-content-between align-items-center">
-        <span class="text-primary fw-bold">From INR 299</span>
-        <a href="{% url 'flight_search' %}?destination=DAJ&destination_name=Darjeeling" class="btn btn-sm btn-outline-primary">View Flights</a>
-      </div>
-    </div>
-  </div>
-</div>
+</section>
 
-  </div>
-</div>
-
-<!-- Airlines Partners Section -->
-<div class="bg-light py-5">
+<!-- ===== STATS ===== -->
+<section class="stats-section">
   <div class="container">
-    <h2 class="text-center mb-5">Our Airline Partners</h2>
-    <div class="row justify-content-center align-items-center text-center g-4">
-      <!-- Nepal Airlines -->
-      <div class="col-lg-2 col-md-3 col-4">
-        <img src="https://vectorseek.com/wp-content/uploads/2023/09/Nepal-airlines-Logo-Vector.svg-.png" alt="Nepal Airlines" class="img-fluid" style="max-height: 60px;">
-        <p class="small mt-2 mb-0 text-muted">Nepal Airlines</p>
+    <div class="row g-0">
+      <div class="col-6 col-md-3 stat-item" style="border-right:1px solid #f1f5f9;">
+        <div class="stat-number">500<span>K+</span></div>
+        <div class="stat-label">Happy Travelers</div>
       </div>
-
-      <!-- Air India -->
-      <div class="col-lg-2 col-md-3 col-4">
-        <img src="https://www.liblogo.com/img-logo/ai4766i6c7-air-india-logo-indian-airlines-logo-and-symbol-meaning-history-png-airline.png" alt="Air India" class="img-fluid" style="max-height: 60px;">
-        <p class="small mt-2 mb-0 text-muted">Air India</p>
+      <div class="col-6 col-md-3 stat-item" style="border-right:1px solid #f1f5f9;">
+        <div class="stat-number">150<span>+</span></div>
+        <div class="stat-label">Destinations</div>
       </div>
-
-      <!-- IndiGo -->
-      <div class="col-lg-2 col-md-3 col-4">
-        <img src="https://flywith.virginatlantic.com/content/dam/HelpCentre/partner-airlines/logos/indigo%20logo.png" alt="IndiGo" class="img-fluid" style="max-height: 60px;">
-        <p class="small mt-2 mb-0 text-muted">IndiGo</p>
+      <div class="col-6 col-md-3 stat-item" style="border-right:1px solid #f1f5f9;">
+        <div class="stat-number">50<span>+</span></div>
+        <div class="stat-label">Airline Partners</div>
       </div>
-
-      <!-- Delta Airlines -->
-      <div class="col-lg-2 col-md-3 col-4">
-        <img src="https://logos-world.net/wp-content/uploads/2021/08/Delta-Air-Lines-First-era-Logo-1934-1951.png" alt="Delta Airlines" class="img-fluid" style="max-height: 60px;">
-        <p class="small mt-2 mb-0 text-muted">Delta Airlines</p>
+      <div class="col-6 col-md-3 stat-item">
+        <div class="stat-number">4.9<span>★</span></div>
+        <div class="stat-label">Average Rating</div>
       </div>
-
-      <!-- Emirates -->
-      <div class="col-lg-2 col-md-3 col-4">
-        <img src="https://pluspng.com/img-png/emirates-airlines-logo-png-qatar-airways-logo-png-img-567-567-free-transparent-logo-900x580.jpg" alt="Emirates" class="img-fluid" style="max-height: 60px;">
-        <p class="small mt-2 mb-0 text-muted">Emirates</p>
-      </div>
-
-      <!-- Singapore Airlines -->
-      <div class="col-lg-2 col-md-3 col-4">
-        <img src="https://th.bing.com/th/id/R.a77744b7790fcbf403eda04247d2d5d3?rik=i43Q59VL7ys3AQ&riu=http%3a%2f%2fdwglogo.com%2fwp-content%2fuploads%2f2016%2f08%2fSingapore_Airlines_logo-02.png&ehk=ONBpnWvZSdloI5gEkYZoVPxgRbYbETChVLGckXU77kI%3d&risl=&pid=ImgRaw&r=0" alt="Singapore Airlines" class="img-fluid" style="max-height: 60px;">
-        <p class="small mt-2 mb-0 text-muted">Singapore Airlines</p>
-      </div>
-
-      <!-- Qatar Airways -->
-      <div class="col-lg-2 col-md-3 col-4">
-        <img src="https://download.logo.wine/logo/Qatar_Airways/Qatar_Airways-Logo.wine.png" alt="Qatar Airways" class="img-fluid" style="max-height: 60px;">
-        <p class="small mt-2 mb-0 text-muted">Qatar Airways</p>
-      </div>
-
-      <!-- Lufthansa -->
-      <div class="col-lg-2 col-md-3 col-4">
-        <img src="https://loghi-famosi.com/wp-content/uploads/2021/01/Lufthansa-Simbolo.png" alt="Lufthansa" class="img-fluid" style="max-height: 60px;">
-        <p class="small mt-2 mb-0 text-muted">Lufthansa</p>
-      </div>
-
-      <!-- British Airways -->
-      <div class="col-lg-2 col-md-3 col-4">
-        <img src="https://cdn.1min30.com/wp-content/uploads/2018/07/British-Airways-embleme.jpg" alt="British Airways" class="img-fluid" style="max-height: 60px;">
-        <p class="small mt-2 mb-0 text-muted">British Airways</p>
-      </div>
-    </div>
-
-    <div class="text-center mt-5">
-      <a href="#" class="btn btn-outline-secondary">View All Partners</a>
     </div>
   </div>
-</div>
+</section>
 
+<!-- ===== POPULAR DESTINATIONS ===== -->
+<section class="py-6" style="padding:5rem 0; background:#f8fafc;">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="section-label-tag"><i class="bi bi-geo-alt-fill"></i> Popular Destinations</div>
+      <h2 class="section-title">Where Will You Go Next?</h2>
+      <p class="section-subtitle mt-2">Hand-picked destinations with the best flight deals, curated just for you.</p>
+    </div>
+    <div class="row g-4">
+      <!-- Paris -->
+      <div class="col-lg-3 col-md-6">
+        <a href="{% url 'flight_search' %}?destination=CDG&destination_name=Paris" class="dest-card">
+          <img src="https://images.unsplash.com/photo-1431274172761-fca41d930114?auto=format&fit=crop&w=600&q=80"
+            alt="Paris">
+          <span class="dest-flights-badge">42 flights/week</span>
+          <div class="dest-card-overlay">
+            <div class="dest-city">Paris</div>
+            <div class="dest-country">France</div>
+            <div class="dest-price">From ₹3,999</div>
+          </div>
+        </a>
+      </div>
+      <!-- Tokyo -->
+      <div class="col-lg-3 col-md-6">
+        <a href="{% url 'flight_search' %}?destination=HND&destination_name=Tokyo" class="dest-card">
+          <img src="https://images.unsplash.com/photo-1492571350019-22de08371fd3?auto=format&fit=crop&w=600&q=80"
+            alt="Tokyo">
+          <span class="dest-flights-badge">28 flights/week</span>
+          <div class="dest-card-overlay">
+            <div class="dest-city">Tokyo</div>
+            <div class="dest-country">Japan</div>
+            <div class="dest-price">From ₹17,999</div>
+          </div>
+        </a>
+      </div>
+      <!-- Dubai -->
+      <div class="col-lg-3 col-md-6">
+        <a href="{% url 'flight_search' %}?destination=DXB&destination_name=Dubai" class="dest-card">
+          <img src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=600&q=80"
+            alt="Dubai">
+          <span class="dest-flights-badge">35 flights/week</span>
+          <div class="dest-card-overlay">
+            <div class="dest-city">Dubai</div>
+            <div class="dest-country">UAE</div>
+            <div class="dest-price">From ₹7,499</div>
+          </div>
+        </a>
+      </div>
+      <!-- New York -->
+      <div class="col-lg-3 col-md-6">
+        <a href="{% url 'flight_search' %}?destination=JFK&destination_name=New+York" class="dest-card">
+          <img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=600&q=80"
+            alt="New York">
+          <span class="dest-flights-badge">56 flights/week</span>
+          <div class="dest-card-overlay">
+            <div class="dest-city">New York</div>
+            <div class="dest-country">USA</div>
+            <div class="dest-price">From ₹29,999</div>
+          </div>
+        </a>
+      </div>
+      <!-- Delhi -->
+      <div class="col-lg-3 col-md-6">
+        <a href="{% url 'flight_search' %}?destination=DEL&destination_name=Delhi" class="dest-card">
+          <img src="https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=600&q=80"
+            alt="Delhi">
+          <span class="dest-flights-badge">32 flights/week</span>
+          <div class="dest-card-overlay">
+            <div class="dest-city">Delhi</div>
+            <div class="dest-country">India</div>
+            <div class="dest-price">From ₹4,999</div>
+          </div>
+        </a>
+      </div>
+      <!-- Kathmandu -->
+      <div class="col-lg-3 col-md-6">
+        <a href="{% url 'flight_search' %}?destination=KTM&destination_name=Kathmandu" class="dest-card">
+          <img src="https://images.unsplash.com/photo-1544085701-4d42a03bc9e5?auto=format&fit=crop&w=600&q=80"
+            alt="Kathmandu">
+          <span class="dest-flights-badge">18 flights/week</span>
+          <div class="dest-card-overlay">
+            <div class="dest-city">Kathmandu</div>
+            <div class="dest-country">Nepal</div>
+            <div class="dest-price">From ₹7,999</div>
+          </div>
+        </a>
+      </div>
+      <!-- Singapore -->
+      <div class="col-lg-3 col-md-6">
+        <a href="{% url 'flight_search' %}?destination=SIN&destination_name=Singapore" class="dest-card">
+          <img src="https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=600&q=80"
+            alt="Singapore">
+          <span class="dest-flights-badge">24 flights/week</span>
+          <div class="dest-card-overlay">
+            <div class="dest-city">Singapore</div>
+            <div class="dest-country">Singapore</div>
+            <div class="dest-price">From ₹12,499</div>
+          </div>
+        </a>
+      </div>
+      <!-- Bali -->
+      <div class="col-lg-3 col-md-6">
+        <a href="{% url 'flight_search' %}?destination=DPS&destination_name=Bali" class="dest-card">
+          <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80"
+            alt="Bali">
+          <span class="dest-flights-badge">20 flights/week</span>
+          <div class="dest-card-overlay">
+            <div class="dest-city">Bali</div>
+            <div class="dest-country">Indonesia</div>
+            <div class="dest-price">From ₹15,999</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FEATURES ===== -->
+<section class="features-section" style="padding:5rem 0;">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="section-label-tag"><i class="bi bi-stars"></i> Why SkyWings</div>
+      <h2 class="section-title">Everything You Need to Fly</h2>
+      <p class="section-subtitle mt-2">From search to boarding pass — we've got you covered at every step of your
+        journey.</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card">
+          <div class="feature-icon blue"><i class="bi bi-lightning-charge-fill"></i></div>
+          <div class="feature-title">Instant Booking</div>
+          <p class="feature-text">Book your flight in under 2 minutes. Get instant confirmation and e-tickets delivered
+            to your inbox.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card">
+          <div class="feature-icon green"><i class="bi bi-shield-check-fill"></i></div>
+          <div class="feature-title">Secure & Safe</div>
+          <p class="feature-text">256-bit SSL encryption on all transactions. Your data and payments are always
+            protected with us.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card">
+          <div class="feature-icon purple"><i class="bi bi-tag-fill"></i></div>
+          <div class="feature-title">Best Price</div>
+          <p class="feature-text">We compare hundreds of airlines to guarantee you the lowest fare available. No hidden
+            fees, ever.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card">
+          <div class="feature-icon amber"><i class="bi bi-headset"></i></div>
+          <div class="feature-title">24/7 Support</div>
+          <p class="feature-text">Our expert travel team is available round the clock to help you with bookings,
+            changes, or emergencies.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== AIRLINE PARTNERS ===== -->
+<section style="padding:5rem 0; background:#fff;">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="section-label-tag"><i class="bi bi-buildings"></i> Our Partners</div>
+      <h2 class="section-title">Trusted Airline Partners</h2>
+      <p class="section-subtitle mt-2">We work with the world's leading airlines to bring you the best routes and fares.
+      </p>
+    </div>
+    <div class="row g-3 justify-content-center align-items-center">
+      <div class="col-6 col-md-3 col-lg-2">
+        <div class="partner-wrap">
+          <img src="https://vectorseek.com/wp-content/uploads/2023/09/Nepal-airlines-Logo-Vector.svg-.png"
+            alt="Nepal Airlines">
+        </div>
+      </div>
+      <div class="col-6 col-md-3 col-lg-2">
+        <div class="partner-wrap">
+          <img
+            src="https://www.liblogo.com/img-logo/ai4766i6c7-air-india-logo-indian-airlines-logo-and-symbol-meaning-history-png-airline.png"
+            alt="Air India">
+        </div>
+      </div>
+      <div class="col-6 col-md-3 col-lg-2">
+        <div class="partner-wrap">
+          <img src="https://flywith.virginatlantic.com/content/dam/HelpCentre/partner-airlines/logos/indigo%20logo.png"
+            alt="IndiGo">
+        </div>
+      </div>
+      <div class="col-6 col-md-3 col-lg-2">
+        <div class="partner-wrap">
+          <img src="https://download.logo.wine/logo/Qatar_Airways/Qatar_Airways-Logo.wine.png" alt="Qatar Airways">
+        </div>
+      </div>
+      <div class="col-6 col-md-3 col-lg-2">
+        <div class="partner-wrap">
+          <img src="https://loghi-famosi.com/wp-content/uploads/2021/01/Lufthansa-Simbolo.png" alt="Lufthansa">
+        </div>
+      </div>
+      <div class="col-6 col-md-3 col-lg-2">
+        <div class="partner-wrap">
+          <img src="https://cdn.1min30.com/wp-content/uploads/2018/07/British-Airways-embleme.jpg"
+            alt="British Airways">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA SECTION ===== -->
+<section style="padding:5rem 0; background:#f8fafc;">
+  <div class="container">
+    <div class="cta-section text-center text-white">
+      <div style="position:relative; z-index:2;">
+        <div class="section-label-tag"
+          style="background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.9); border:1px solid rgba(255,255,255,0.2); margin: 0 auto 1rem;">
+          <i class="bi bi-airplane-fill"></i> Ready to Fly?
+        </div>
+        <h2 class="section-title" style="color:#fff; margin-bottom:1rem;">Your Next Adventure Awaits</h2>
+        <p style="color:rgba(255,255,255,0.65); font-size:1.05rem; max-width:500px; margin: 0 auto 2.5rem;">
+          Join over 500,000 happy travelers who trust SkyWings for their journeys every day.
+        </p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+          <a href="{% url 'flight_search' %}" class="btn-hero-primary">
+            <i class="bi bi-search"></i> Search Flights Now
+          </a>
+          <a href="{% url 'register' %}"
+            style="display:inline-flex; align-items:center; gap:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.25); color:#fff; padding:16px 32px; border-radius:14px; font-weight:600; text-decoration:none; transition:all 0.3s; backdrop-filter:blur(8px);">
+            <i class="bi bi-person-plus-fill"></i> Create Free Account
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 {% endblock %}

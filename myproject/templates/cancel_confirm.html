@@ -1,119 +1,417 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Cancel Booking #{{ booking.reference }}{% endblock %}
 
-{% block body %}
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow">
-                <div class="card-header bg-danger text-white">
-                    <h3 class="mb-0">
-                        <i class="bi bi-exclamation-triangle"></i> Cancel Booking #{{ booking.reference }}
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-warning">
-                        <h4 class="alert-heading">Are you sure you want to cancel this bookingINR </h4>
-                        <p class="mb-0">This action cannot be undone. Any seats reserved will be released back to inventory.</p>
-                    </div>
-
-                    <div class="card mb-4">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0">Booking Details</h5>
-                        </div>
-                        <div class="card-body">
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p><strong>Flight:</strong> {{ booking.flight.airline.code }}{{ booking.flight.flight_number }}</p>
-                                    <p><strong>From:</strong> {{ booking.flight.departure_airport.city }} ({{ booking.flight.departure_airport.code }})</p>
-                                    <p><strong>To:</strong> {{ booking.flight.arrival_airport.city }} ({{ booking.flight.arrival_airport.code }})</p>
-                                </div>
-                                <div class="col-md-6">
-                                    <p><strong>Departure:</strong> {{ booking.flight.departure_time|date:"M j, Y H:i" }}</p>
-                                    {% for passenger in passengers %}
-                                    <p><strong>Passenger:</strong> {{ passenger.first_name }} {{ passenger.last_name }}</p>
-                                {% endfor %}
-                                    <p><strong>Class:</strong> 
-                                        <span class="badge bg-{% if booking.travel_class == 'ECONOMY' %}primary{% elif booking.travel_class == 'BUSINESS' %}warning{% else %}dark{% endif %}">
-                                            {{ booking.travel_class }}
-                                        </span>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card mb-4">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0">Refund Information</h5>
-                        </div>
-                        <div class="card-body">
-                            <table class="table table-sm">
-                                <tr>
-                                    <th>Total Paid:</th>
-                                    <td>INR {{ booking.total_price }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Refund Amount:</th>
-                                    <td class="fw-bold">INR {{ booking.total_price }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Refund Method:</th>
-                                    <td>Original payment method</td>
-                                </tr>
-                                <tr>
-                                    <th>Processing Time:</th>
-                                    <td>5-7 business days</td>
-                                </tr>
-                            </table>
-                            <small class="text-muted">* Refund amount and processing time may vary based on payment method and bank policies.</small>
-                        </div>
-                    </div>
-
-                    <form method="POST">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="cancel_reason" class="form-label">Reason for cancellation (optional):</label>
-                            <select class="form-select" id="cancel_reason" name="cancel_reason">
-                                <option value="">Select a reason...</option>
-                                <option value="change_plans">Change of plans</option>
-                                <option value="found_cheaper">Found a better price</option>
-                                <option value="travel_dates">Changed travel dates</option>
-                                <option value="other">Other reason</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="comments" class="form-label">Additional comments:</label>
-                            <textarea class="form-control" id="comments" name="comments" rows="3"></textarea>
-                        </div>
-
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="{% url 'booking_detail' booking.reference %}" class="btn btn-outline-secondary me-md-2">
-                                <i class="bi bi-arrow-left"></i> Back to Booking
-                            </a>
-                            <button type="submit" class="btn btn-danger">
-                                <i class="bi bi-x-circle"></i> Confirm Cancellation
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
 {% block styles %}
 <style>
-    .card {
-        border: none;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-    .card-header {
-        border-bottom: 1px solid rgba(0,0,0,.125);
-    }
+  .cancel-hero {
+    background: #f8fafc;
+    padding: 1.5rem 0 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .cancel-hero h1 {
+    color: #0f172a;
+    font-weight: 800;
+    font-size: 1.8rem;
+    margin: 0;
+  }
+
+  .cancel-hero .breadcrumb-item a {
+    color: #64748b;
+    text-decoration: none;
+  }
+
+  .cancel-hero .breadcrumb-item.active {
+    color: #0f172a;
+    font-weight: 600;
+  }
+
+  .cancel-hero .breadcrumb-item+.breadcrumb-item::before {
+    color: #cbd5e1;
+  }
+
+  .cancel-container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .warning-banner {
+    background: #fffbeb;
+    border: 1.5px solid #fef3c7;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .warning-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #fbbf24;
+    color: #78350f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+
+  .cancel-detail-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1.5px solid #e2e8f0;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  }
+
+  .cancel-detail-header {
+    background: #f1f5f9;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    font-weight: 800;
+    color: #0f172a;
+    font-size: 0.95rem;
+  }
+
+  .cancel-detail-body {
+    padding: 1.5rem;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .detail-row:last-child {
+    border-bottom: none;
+  }
+
+  .detail-label {
+    font-size: 0.85rem;
+    color: #475569;
+    font-weight: 500;
+  }
+
+  .detail-value {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .refund-card {
+    background: #f0fdf4;
+    border-radius: 16px;
+    border: 1.5px solid #dcfce7;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .refund-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+  }
+
+  .refund-label {
+    font-size: 0.85rem;
+    color: #166534;
+  }
+
+  .refund-value {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #166534;
+  }
+
+  .refund-amount-label {
+    font-weight: 700;
+    color: #166534;
+  }
+
+  .refund-total {
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: #15803d;
+  }
+
+  .btn-cancel-confirm {
+    padding: 14px 32px;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 16px rgba(220, 38, 38, 0.35);
+    transition: all 0.25s;
+    cursor: pointer;
+  }
+
+  .btn-cancel-confirm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(220, 38, 38, 0.45);
+    color: #fff;
+  }
+
+  .btn-back {
+    padding: 14px 32px;
+    background: #fff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 12px;
+    color: #475569;
+    font-weight: 700;
+    font-size: 0.95rem;
+    transition: all 0.25s;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-back:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+    background: #f8fafc;
+  }
+
+  /* Dark Mode Overrides */
+  [data-theme="dark"] .cancel-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%) !important;
+    border-bottom: none !important;
+  }
+
+  [data-theme="dark"] .cancel-hero h1 {
+    color: #fff !important;
+  }
+
+  [data-theme="dark"] .hero-subtitle {
+    color: rgba(255, 255, 255, 0.6) !important;
+  }
+
+  [data-theme="dark"] .cancel-hero .breadcrumb-item a {
+    color: rgba(255, 255, 255, 0.55) !important;
+  }
+
+  [data-theme="dark"] .cancel-hero .breadcrumb-item.active {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  [data-theme="dark"] .cancel-hero .breadcrumb-item+.breadcrumb-item::before {
+    color: rgba(255, 255, 255, 0.35) !important;
+  }
+
+  [data-theme="dark"] .cancel-detail-card {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+  }
+
+  [data-theme="dark"] .cancel-detail-header {
+    background: #0f172a !important;
+    border-bottom-color: #334155 !important;
+    color: #f8fafc !important;
+  }
+
+  [data-theme="dark"] .detail-value,
+  [data-theme="dark"] h5 {
+    color: #f8fafc !important;
+  }
+
+  [data-theme="dark"] .detail-row {
+    border-bottom-color: #334155 !important;
+  }
+
+  [data-theme="dark"] .warning-banner {
+    background: linear-gradient(135deg, #422006, #78350f) !important;
+    border-color: #713f12 !important;
+  }
+
+  [data-theme="dark"] .warning-banner h5,
+  [data-theme="dark"] .warning-banner p {
+    color: #fef3c7 !important;
+  }
+
+  [data-theme="dark"] .warning-icon {
+    background: #fbbf24;
+    color: #78350f;
+  }
+
+  [data-theme="dark"] .refund-card {
+    background: linear-gradient(135deg, #064e3b, #065f46) !important;
+    border-color: #065f46 !important;
+  }
+
+  [data-theme="dark"] .refund-label,
+  [data-theme="dark"] .refund-value,
+  [data-theme="dark"] .refund-amount-label,
+  [data-theme="dark"] .refund-card h6,
+  [data-theme="dark"] .refund-card p {
+    color: #d1fae5 !important;
+  }
+
+  [data-theme="dark"] .refund-total {
+    color: #34d399 !important;
+  }
+
+  [data-theme="dark"] .btn-back {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: #334155 !important;
+    color: #94a3b8 !important;
+  }
+
+  [data-theme="dark"] .btn-back:hover {
+    border-color: #60a5fa;
+    color: #60a5fa;
+  }
+
+  [data-theme="dark"] .form-select,
+  [data-theme="dark"] .form-control {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+  }
 </style>
+{% endblock %}
+
+{% block body %}
+<div class="cancel-hero">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-2">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'my_bookings' %}">My Bookings</a></li>
+        <li class="breadcrumb-item active">Cancel</li>
+      </ol>
+    </nav>
+    <h1><i class="bi bi-exclamation-triangle me-2"></i>Cancel Booking</h1>
+    <p style="color:rgba(0,0,0,0.5); font-weight:600; font-size:0.9rem; margin:4px 0 0;" class="hero-subtitle">
+      Class: {{ booking.travel_class|upper }}
+    </p>
+  </div>
+</div>
+
+<div class="container py-4">
+  <div class="cancel-container">
+    <!-- Warning -->
+    <div class="warning-banner">
+      <div class="d-flex align-items-start gap-3">
+        <div class="warning-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div>
+          <h5 style="font-weight:800; color:#78350f; margin-bottom:4px;">Are you sure?</h5>
+          <p style="color:#92400e; font-size:0.875rem; margin:0; line-height:1.6;">
+            This action cannot be undone. Any reserved seats will be released back to inventory and your booking will be
+            marked as cancelled.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Booking Details -->
+    <div class="cancel-detail-card">
+      <div class="cancel-detail-header">
+        <i class="bi bi-airplane me-2" style="color:#2563eb;"></i>Booking Details
+      </div>
+      <div class="cancel-detail-body">
+        <div class="detail-row">
+          <span class="detail-label">Reference</span>
+          <span class="detail-value" style="font-family:monospace;"># {{ booking.reference }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Flight</span>
+          <span class="detail-value">{{ booking.flight.airline.code }}{{ booking.flight.flight_number }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Route</span>
+          <span class="detail-value">
+            {{ booking.flight.departure_airport.city }} ({{ booking.flight.departure_airport.code }})
+            → {{ booking.flight.arrival_airport.city }} ({{ booking.flight.arrival_airport.code }})
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Departure</span>
+          <span class="detail-value">{{ booking.flight.departure_time|date:"M j, Y H:i" }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Class</span>
+          <span class="detail-value">
+            <span class="badge" style="background:#eff6ff; color:#2563eb; font-weight:700; border-radius:99px;">
+              {{ booking.travel_class|upper }}</span>
+          </span>
+        </div>
+        {% for passenger in passengers %}
+        <div class="detail-row">
+          <span class="detail-label">Passenger {{ forloop.counter }}</span>
+          <span class="detail-value">{{ passenger.first_name }} {{ passenger.last_name }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Refund Info -->
+    <div class="refund-card">
+      <h6 style="font-weight:800; color:#166534; margin-bottom:1rem;">
+        <i class="bi bi-cash-coin me-2"></i>Refund Information
+      </h6>
+      <div class="refund-row">
+        <span class="refund-label">Total Paid</span>
+        <span class="refund-value">₹{{ booking.total_price }}</span>
+      </div>
+      <div class="refund-row">
+        <span class="refund-label">Refund Method</span>
+        <span class="refund-value">Original payment method</span>
+      </div>
+      <div class="refund-row">
+        <span class="refund-label">Processing Time</span>
+        <span class="refund-value">5–7 business days</span>
+      </div>
+      <hr style="border-color:rgba(22,101,52,0.15);">
+      <div class="d-flex justify-content-between align-items-center">
+        <span class="refund-amount-label">Refund Amount</span>
+        <span class="refund-total">₹{{ booking.total_price }}</span>
+      </div>
+      <p style="font-size:0.72rem; color:#166534; opacity:0.7; margin:8px 0 0;">
+        * Refund amount and processing time may vary based on payment method and bank policies.
+      </p>
+    </div>
+
+    <!-- Cancel Form -->
+    <div class="cancel-detail-card">
+      <div class="cancel-detail-header">
+        <i class="bi bi-chat-dots me-2" style="color:#2563eb;"></i>Reason (Optional)
+      </div>
+      <div class="cancel-detail-body">
+        <form method="POST">
+          {% csrf_token %}
+          <div class="mb-3">
+            <select class="form-select" id="cancel_reason" name="cancel_reason">
+              <option value="">Select a reason...</option>
+              <option value="change_plans">Change of plans</option>
+              <option value="found_cheaper">Found a better price</option>
+              <option value="travel_dates">Changed travel dates</option>
+              <option value="other">Other reason</option>
+            </select>
+          </div>
+          <div class="mb-4">
+            <textarea class="form-control" id="comments" name="comments" rows="3"
+              placeholder="Any additional comments..."></textarea>
+          </div>
+          <div class="d-flex gap-3 flex-wrap">
+            <a href="{% url 'booking_detail' booking.reference %}" class="btn-back">
+              <i class="bi bi-arrow-left me-2"></i>Back to Booking
+            </a>
+            <button type="submit" class="btn-cancel-confirm">
+              <i class="bi bi-x-circle me-2"></i>Confirm Cancellation
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

@@ -1,151 +1,523 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
+{% load flight_extras %}
 
 {% block title %}Booking Confirmation #{{ booking.reference }}{% endblock %}
 
+{% block styles %}
+.detail-hero {
+background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%);
+padding: 1.5rem 0 1.25rem;
+}
+.detail-hero h1 { color:#fff; font-weight:800; font-size:1.8rem; margin:0; }
+
+/* Ticket card */
+.ticket-card {
+background:#fff; border-radius:20px; border:1.5px solid #e2e8f0;
+overflow:hidden; box-shadow:0 8px 30px rgba(0,0,0,0.06);
+}
+.ticket-header {
+background:#f1f5f9;
+border-bottom:1px solid #e2e8f0; padding:1.5rem 2rem;
+display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;
+}
+.ticket-ref { font-family:'Inter',monospace; font-weight:800; color:#0f172a; font-size:1.1rem; }
+.ticket-body { padding:2rem; }
+.ticket-airline-strip {
+display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:1.5rem;
+}
+.ticket-airline-item {
+display:inline-flex; align-items:center; gap:10px;
+background:#f8fafc; border:1px solid #dbeafe; border-radius:12px;
+padding:8px 12px; color:#0f172a; font-weight:800; font-size:0.82rem;
+}
+.ticket-airline-logo,
+.ticket-airline-fallback {
+width:42px; height:42px; border-radius:10px; flex:0 0 42px;
+border:1px solid #e2e8f0; background:#fff;
+}
+.ticket-airline-logo {
+object-fit:contain; padding:5px;
+}
+.ticket-airline-fallback {
+display:grid; place-items:center;
+background:linear-gradient(135deg,#dbeafe,#fff);
+color:#1d4ed8; font-weight:900; letter-spacing:0.04em;
+}
+.timeline-airline-logo,
+.timeline-airline-fallback {
+width:34px; height:34px; border-radius:8px; margin:0 auto 6px;
+border:1px solid #e2e8f0; background:#fff;
+}
+.timeline-airline-logo {
+display:block; object-fit:contain; padding:4px;
+}
+.timeline-airline-fallback {
+display:grid; place-items:center; color:#1d4ed8; font-weight:900; font-size:0.68rem;
+}
+
+/* Route display */
+.route-display { display:flex; align-items:flex-start; gap:1.5rem; }
+.route-point { text-align:center; min-width:120px; }
+.route-time { font-size:2rem; font-weight:900; color:#0f172a; line-height:1; }
+.route-city { font-size:1rem; font-weight:700; color:#0f172a; margin-top:6px; }
+.route-detail { font-size:0.78rem; color:#64748b; margin-top:2px; font-weight: 500; }
+.route-center { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+padding-top:8px; }
+.route-line { width:100%; height:2px; background:#e2e8f0; position:relative; margin:8px 0; }
+.route-line::before { content:''; position:absolute; left:0; top:-4px; width:10px; height:10px; border:2px solid
+#2563eb; border-radius:50%; background:#fff; }
+.route-line::after { content:''; position:absolute; right:0; top:-4px; width:10px; height:10px; background:#2563eb;
+border-radius:50%; }
+.route-plane { color:#2563eb; font-size:1.2rem; }
+.route-dur { font-size:0.72rem; color:#475569; font-weight:700; }
+.route-stop { font-size:0.7rem; color:#16a34a; font-weight:700; text-transform:uppercase; }
+
+/* Info grid */
+.info-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:1rem; }
+.info-item { background:#f1f5f9; border-radius:12px; padding:1rem 1.25rem; border: 1px solid #e2e8f0; }
+.info-label { font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.06em;
+margin-bottom:4px; }
+.info-value { font-size:0.95rem; font-weight:700; color:#0f172a; }
+
+/* Passenger card */
+.pax-card {
+background:#fff; border-radius:14px; border:1.5px solid #e2e8f0;
+padding:1.25rem; transition:all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+.pax-card:hover { box-shadow:0 8px 24px rgba(0,0,0,0.08); border-color:#bfdbfe; }
+.pax-num {
+width:32px; height:32px; border-radius:50%;
+background:linear-gradient(135deg,#2563eb,#7c3aed);
+color:#fff; display:flex; align-items:center; justify-content:center;
+font-weight:800; font-size:0.75rem; flex-shrink:0;
+}
+.pax-detail-row { display:flex; justify-content:space-between; padding:4px 0; border-bottom: 1px solid #f8fafc; }
+.pax-detail-row:last-child { border-bottom: none; }
+.pax-detail-label { font-size:0.78rem; color:#64748b; font-weight: 500; }
+.pax-name { font-weight:700; color:#0f172a; }
+.pax-detail-value { font-size:0.78rem; font-weight:600; color:#0f172a; }
+
+/* Payment card */
+.payment-info-card {
+background:#f0fdf4;
+border-radius:16px; border:1.5px solid #dcfce7; padding:1.5rem;
+}
+
+/* Actions */
+.action-bar {
+background:#fff; border-radius:14px; border:1.5px solid #cbd5e1;
+padding:1.25rem 1.5rem; display:flex; align-items:center; gap:1rem; flex-wrap:wrap;
+}
+.btn-action {
+padding:10px 24px; border-radius:10px; font-weight:700; font-size:0.85rem;
+transition:all 0.25s; text-decoration:none; display:inline-flex; align-items:center; gap:8px;
+}
+.btn-action-primary { background:linear-gradient(135deg,#2563eb,#7c3aed); color:#fff; border:none; }
+.btn-action-primary:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(37,99,235,0.35); color:#fff; }
+.btn-action-outline { background:#f1f5f9; border:1.5px solid #cbd5e1; color:#475569; }
+.btn-action-outline:hover { border-color:#2563eb; color:#2563eb; transform:translateY(-1px); background: #fff; }
+.btn-action-danger { background:#fff; border:1.5px solid #fecaca; color:#dc2626; }
+.btn-action-danger:hover { background:#fef2f2; transform:translateY(-1px); border-color: #ef4444; }
+
+@media (max-width: 768px) {
+.route-display { flex-direction:column; align-items:center; }
+.route-center { width:100%; flex-direction:row; padding:0; gap:12px; }
+.route-line { flex:1; }
+}
+
+/* Dark Mode Overrides */
+[data-theme="dark"] .ticket-card,
+[data-theme="dark"] .pax-card,
+[data-theme="dark"] .action-bar,
+[data-theme="dark"] .info-item,
+[data-theme="dark"] .ticket-airline-item {
+background: #1e293b !important;
+border-color: #334155 !important;
+color: #f8fafc !important;
+}
+[data-theme="dark"] .ticket-header {
+background: #0f172a !important;
+border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .ticket-ref,
+[data-theme="dark"] .route-time,
+[data-theme="dark"] .route-city,
+[data-theme="dark"] .info-value,
+[data-theme="dark"] .pax-name,
+[data-theme="dark"] .pax-detail-value,
+[data-theme="dark"] h5 {
+color: #f8fafc !important;
+}
+[data-theme="dark"] .route-line {
+background: #334155 !important;
+}
+[data-theme="dark"] .route-line::before {
+background: #1e293b !important;
+}
+[data-theme="dark"] .payment-info-card {
+background: linear-gradient(135deg, #064e3b, #065f46) !important;
+border-color: #065f46 !important;
+}
+[data-theme="dark"] .payment-info-card span,
+[data-theme="dark"] .payment-info-card code {
+color: #d1fae5 !important;
+}
+[data-theme="dark"] .btn-action-outline {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .btn-action-outline:hover {
+border-color: #60a5fa;
+color: #60a5fa;
+}
+[data-theme="dark"] .btn-action-danger {
+  background: rgba(220, 38, 38, 0.1) !important;
+  border-color: rgba(220, 38, 38, 0.4) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] .btn-action-danger:hover {
+  background: #dc2626 !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .pax-num {
+  background: #0f172a;
+}
+
+/* Professional Stop Visualization */
+.stop-line-bar {
+  height: 3px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  width: 100%;
+  position: relative;
+  margin: 12px 0;
+}
+.stop-line-active {
+  position: absolute;
+  height: 100%;
+  background: #ef4444;
+  border-radius: 4px;
+  left: 0;
+  right: 0;
+}
+.stop-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border: 2.5px solid #ef4444;
+  border-radius: 50%;
+  top: -3.5px;
+  z-index: 2;
+  box-shadow: 0 0 0 4px #fff;
+}
+.stop-label {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #475569;
+  white-space: nowrap;
+}
+color: #60a5fa;
+border: 1px solid #334155;
+}
+{% endblock %}
+
 {% block body %}
-<div class="container mt-4">
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h3 class="mb-0"><i class="bi bi-check-circle-fill"></i> Booking Confirmation: {{ booking.reference }}</h3>
+<div class="detail-hero">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-2">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}"
+            style="color:rgba(255,255,255,0.55);text-decoration:none;">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'my_bookings' %}"
+            style="color:rgba(255,255,255,0.55);text-decoration:none;">My Bookings</a></li>
+        <li class="breadcrumb-item" style="color:rgba(255,255,255,0.9);">{{ booking.reference }}</li>
+      </ol>
+    </nav>
+    <h1><i class="bi bi-ticket-perforated me-2"></i>Booking Details</h1>
+  </div>
+</div>
+
+<div class="container py-4">
+  <!-- Main Ticket Card -->
+  <div class="ticket-card mb-4">
+    <div class="ticket-header">
+      <div>
+        <div class="ticket-ref"># {{ booking.reference }}</div>
+        <div style="font-size:0.8rem; color:#475569; font-weight: 500; margin-top:2px;">Booked on {{ booking.booking_date|date:"M j, Y H:i" }}</div>
+      </div>
+      <span class="badge px-3 py-2"
+        style="font-size:0.82rem; font-weight:700; border-radius:99px;
+        {% if booking.status == 'CONFIRMED' %}background:#dcfce7; color:#15803d;{% else %}background:#fee2e2; color:#b91c1c;{% endif %}">
+        {% if booking.status == 'CONFIRMED' %}<i class="bi bi-check-circle-fill me-1"></i>{% else %}<i
+          class="bi bi-x-circle-fill me-1"></i>{% endif %}
+        {{ booking.get_status_display }}
+      </span>
+    </div>
+
+    <div class="ticket-body">
+      <div class="ticket-airline-strip">
+        {% if booking.booking_segments.exists %}
+          {% for seg in booking.booking_segments.all %}
+          <div class="ticket-airline-item" title="{{ seg.flight.airline.name }}">
+            {% if seg.flight.airline.logo %}
+            <img src="{{ seg.flight.airline.logo.url }}" alt="{{ seg.flight.airline.name }}" class="ticket-airline-logo">
+            {% else %}
+            <span class="ticket-airline-fallback">{{ seg.flight.airline.code }}</span>
+            {% endif %}
+            <span>{{ seg.flight.airline.name }} {{ seg.flight.airline.code }}{{ seg.flight.flight_number }}</span>
+          </div>
+          {% endfor %}
+        {% elif booking.flight %}
+          <div class="ticket-airline-item" title="{{ booking.flight.airline.name }}">
+            {% if booking.flight.airline.logo %}
+            <img src="{{ booking.flight.airline.logo.url }}" alt="{{ booking.flight.airline.name }}" class="ticket-airline-logo">
+            {% else %}
+            <span class="ticket-airline-fallback">{{ booking.flight.airline.code }}</span>
+            {% endif %}
+            <span>{{ booking.flight.airline.name }} {{ booking.flight.airline.code }}{{ booking.flight.flight_number }}</span>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Route -->
+      <div class="route-display mb-4">
+        <div class="route-point">
+          <div class="route-time">{% if booking.booking_segments.exists %}{{ booking.booking_segments.first.flight.departure_time|time:"H:i" }}{% else %}{{ booking.flight.departure_time|time:"H:i" }}{% endif %}</div>
+          <div class="route-city">{% if booking.booking_segments.exists %}{{ booking.booking_segments.first.flight.departure_airport.city }}{% else %}{{ booking.flight.departure_airport.city }}{% endif %}</div>
+          <div class="route-detail">{% if booking.booking_segments.exists %}{{ booking.booking_segments.first.flight.departure_airport.code }} · {{ booking.booking_segments.first.flight.departure_airport.name }}{% else %}{{ booking.flight.departure_airport.code }} · {{ booking.flight.departure_airport.name }}{% endif %}</div>
+          <div class="route-detail">{% if booking.booking_segments.exists %}{{ booking.booking_segments.first.flight.departure_time|date:"M d, Y" }}{% else %}{{ booking.flight.departure_time|date:"M d, Y" }}{% endif %}</div>
         </div>
-        <div class="card-body">
-            <!-- Flight Details Section -->
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <h4 class="border-bottom pb-2"><i class="bi bi-airplane"></i> Flight Details</h4>
-                    <div class="row">
-                        <div class="col-4 text-end fw-bold">Flight:</div>
-                        <div class="col-8">{{ booking.flight.airline.name }} ({{ booking.flight.airline.code }}{{ booking.flight.flight_number }})</div>
-                        
-                        <div class="col-4 text-end fw-bold">Class:</div>
-                        <div class="col-8">{{ booking.get_travel_class_display }}</div>
-                        
-                        <div class="col-4 text-end fw-bold">Duration:</div>
-                        <div class="col-8">{{ booking.flight.duration_display }} hours</div>
-                    </div>
-                </div>
-                
-                <div class="col-md-6">
-                    <h4 class="border-bottom pb-2"><i class="bi bi-calendar-event"></i> Booking Information</h4>
-                    <div class="row">
-                        <div class="col-4 text-end fw-bold">Status:</div>
-                        <div class="col-8">
-                            <span class="badge bg-{% if booking.status == 'CONFIRMED' %}success{% else %}danger{% endif %}">
-                                {{ booking.get_status_display }}
-                            </span>
-                        </div>
-                        
-                        <div class="col-4 text-end fw-bold">Date:</div>
-                        <div class="col-8">{{ booking.booking_date|date:"M j, Y H:i" }}</div>
-                        
-                        <div class="col-4 text-end fw-bold">Passengers:</div>
-                        <div class="col-8">{{ passengers|length }}</div>
-                    </div>
-                </div>
-            </div>
+        <div class="route-center" style="flex:1; padding:0 2rem; position:relative;">
+          <div class="stop-line-bar">
+            <div class="stop-line-active"></div>
+            {% if booking.booking_segments.exists %}
+                {% if booking.booking_segments.count > 1 %}
+                  {% with total_segs=booking.booking_segments.count %}
+                  {% for seg in booking.booking_segments.all %}
+                    {% if not forloop.last %}
+                      <div class="stop-dot" style="left: {{ forloop.counter|mul:100|div:total_segs }}%;">
+                        <span class="stop-label">{{ seg.flight.arrival_airport.code }}</span>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                  {% endwith %}
+                {% endif %}
+            {% endif %}
+          </div>
+          <div class="route-stop">
+            {% if booking.booking_segments.exists %}
+                {% with total_stops=booking.booking_segments.count|add:"-1" %}
+                    {% if total_stops == 0 %}Non-stop{% else %}{{ total_stops }} stop{% if total_stops > 1 %}s{% endif %}{% endif %}
+                {% endwith %}
+            {% else %}
+                Non-stop
+            {% endif %}
+          </div>
+        </div>
+        <div class="route-point">
+          <div class="route-time">{% if booking.booking_segments.exists %}{{ booking.booking_segments.last.flight.arrival_time|time:"H:i" }}{% else %}{{ booking.flight.arrival_time|time:"H:i" }}{% endif %}</div>
+          <div class="route-city">{% if booking.booking_segments.exists %}{{ booking.booking_segments.last.flight.arrival_airport.city }}{% else %}{{ booking.flight.arrival_airport.city }}{% endif %}</div>
+          <div class="route-detail">{% if booking.booking_segments.exists %}{{ booking.booking_segments.last.flight.arrival_airport.code }} · {{ booking.booking_segments.last.flight.arrival_airport.name }}{% else %}{{ booking.flight.arrival_airport.code }} · {{ booking.flight.arrival_airport.name }}{% endif %}</div>
+          <div class="route-detail">{% if booking.booking_segments.exists %}{{ booking.booking_segments.last.flight.arrival_time|date:"M d, Y" }}{% else %}{{ booking.flight.arrival_time|date:"M d, Y" }}{% endif %}</div>
+        </div>
+      </div>
 
-            <!-- Airport Details Section -->
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="card h-100">
-                        <div class="card-header bg-light">
-                            <h5><i class="bi bi-geo-alt-fill"></i> Departure</h5>
-                        </div>
-                        <div class="card-body">
-                            <h5>{{ booking.flight.departure_airport.city }} ({{ booking.flight.departure_airport.code }})</h5>
-                            <p class="mb-1">{{ booking.flight.departure_airport.name }}</p>
-                            <p class="mb-1">{{ booking.flight.departure_airport.country }}</p>
-                            <p class="mb-0 text-muted">
-                                <strong>Time:</strong> {{ booking.flight.departure_time|date:"M j, Y H:i" }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-6">
-                    <div class="card h-100">
-                        <div class="card-header bg-light">
-                            <h5><i class="bi bi-geo-fill"></i> Arrival</h5>
-                        </div>
-                        <div class="card-body">
-                            <h5>{{ booking.flight.arrival_airport.city }} ({{ booking.flight.arrival_airport.code }})</h5>
-                            <p class="mb-1">{{ booking.flight.arrival_airport.name }}</p>
-                            <p class="mb-1">{{ booking.flight.arrival_airport.country }}</p>
-                            <p class="mb-0 text-muted">
-                                <strong>Time:</strong> {{ booking.flight.arrival_time|date:"M j, Y H:i" }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      <!-- Flight info grid -->
+      <div class="info-grid mb-4">
+        <div class="info-item">
+          <div class="info-label">Journey</div>
+          <div class="info-value">{% if booking.booking_segments.count > 1 %}Connecting{% else %}Direct{% endif %}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Stops</div>
+          <div class="info-value">{{ booking.booking_segments.count|add:"-1" }} Stop(s)</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Class</div>
+          <div class="info-value">{{ booking.travel_class|upper }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Passengers</div>
+          <div class="info-value">{{ passengers|length }}</div>
+        </div>
+      </div>
 
-            <!-- Passengers Information Section -->
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5>Passenger Details</h5>
+      <!-- Multi-segment Timeline -->
+      <h6 class="fw-800 mb-3" style="font-weight:800; color:#0f172a;">Detailed Itinerary</h6>
+      <div class="timeline-container ms-3">
+        {% for seg in booking.booking_segments.all %}
+        <div class="timeline-item">
+            <div class="timeline-dot" style="left:-25px;"></div>
+            {% if not forloop.last %}<div class="timeline-line" style="left:-20px;"></div>{% endif %}
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <div class="fw-bold">{{ seg.flight.departure_airport.city }} ({{ seg.flight.departure_airport.code }})</div>
+                    <div class="small text-muted">{{ seg.flight.departure_time|date:"M d, H:i" }}</div>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        {% for passenger in passengers %}
-                        <div class="col-md-6 mb-3">
-                            <div class="card">
-                                <div class="card-header bg-light">
-                                    <h6>Passenger {{ forloop.counter }}</h6>
-                                </div>
-                                <div class="card-body">
-                                    <p><strong>Name:</strong> {{ passenger.first_name }} {{ passenger.last_name }}</p>
-                                    <p><strong>Date of Birth:</strong> {{ passenger.date_of_birth|date:"M d, Y" }}</p>
-                                    <p><strong>ID Type:</strong> {{ passenger.get_id_type_display }}</p>
-                                    <p><strong>ID Number:</strong> {{ passenger.id_number }}</p>
-                                    {% if passenger.passport_number %}
-                                    <p><strong>Passport:</strong> {{ passenger.passport_number }}</p>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
+                <div class="col-md-4 text-center">
+                    {% if seg.flight.airline.logo %}
+                    <img src="{{ seg.flight.airline.logo.url }}" alt="{{ seg.flight.airline.name }}" class="timeline-airline-logo">
+                    {% else %}
+                    <div class="timeline-airline-fallback">{{ seg.flight.airline.code }}</div>
+                    {% endif %}
+                    <div class="small fw-bold">{{ seg.flight.airline.name }}</div>
+                    <div class="small text-muted">{{ seg.flight.airline.code }}{{ seg.flight.flight_number }}</div>
+                    {% if seg.flight.stops > 0 %}
+                    <div class="small text-danger fw-bold" style="font-size:0.65rem;">{{ seg.flight.stops }} technical stop{% if seg.flight.stops > 1 %}s{% endif %}</div>
+                    {% endif %}
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="fw-bold">{{ seg.flight.arrival_airport.city }} ({{ seg.flight.arrival_airport.code }})</div>
+                    <div class="small text-muted">{{ seg.flight.arrival_time|date:"M d, H:i" }}</div>
                 </div>
             </div>
-            
-            <!-- Payment Information Section -->
-            {% if payment %}
-            <div class="card mb-4">
-                <div class="card-header bg-light">
-                    <h5><i class="bi bi-credit-card-fill"></i> Payment Information</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p class="mb-2"><strong>Payment Date:</strong> {{ payment.payment_date|date:"M j, Y H:i" }}</p>
-                            <p class="mb-2"><strong>Transaction ID:</strong> <code>{{ payment.transaction_id }}</code></p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-2"><strong>Payment Method:</strong> Credit Card</p>
-                            <p class="mb-2"><strong>Price per passenger:</strong> INR {{ price_breakdown.per_passenger }}</p>
-                            <p class="mb-2"><strong>Total Passengers:</strong> {{ price_breakdown.passenger_count }}</p>
-                            <h5 class="mt-3"><strong>Amount Paid:</strong> <span class="text-success">INR {{ booking.total_price }}</span></h5>
-                        </div>
-                    </div>
-                </div>
+            {% if seg.layover_duration %}
+            <div class="alert alert-warning py-1 px-2 mt-2" style="font-size:0.7rem; display:inline-block;">
+                <i class="bi bi-clock-history me-1"></i>Layover: {{ seg.layover_duration }}
             </div>
             {% endif %}
-            
-            <!-- Actions Section -->
-            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                <a href="{% url 'my_bookings' %}" class="btn btn-outline-secondary me-md-2">
-                    <i class="bi bi-list-ul"></i> View All Bookings
-                </a>
-                <button class="btn btn-primary" onclick="window.print()">
-                    <i class="bi bi-printer"></i> Print Confirmation
-                </button>
-                {% if booking.status == 'CONFIRMED' %}
-                <a href="{% url 'cancel_booking' booking.reference %}" class="btn btn-outline-danger ms-md-2">
-                    <i class="bi bi-x-circle"></i> Cancel Booking
-                </a>
-                {% endif %}
-            </div>
         </div>
+        {% endfor %}
+      </div>
     </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Passengers -->
+    <div class="col-lg-7">
+      <h5 style="font-weight:800; color:#0f172a; margin-bottom:1rem;">
+        <i class="bi bi-people-fill me-2" style="color:#2563eb;"></i>Passenger Details
+      </h5>
+      <div class="row g-3">
+        {% for passenger in passengers %}
+        <div class="col-md-6">
+          <div class="pax-card">
+            <div class="d-flex align-items-center gap-10 mb-3" style="gap:10px;">
+              <div class="pax-num">{{ forloop.counter }}</div>
+              <div>
+                <div class="pax-name">{{ passenger.first_name }} {{ passenger.last_name }}</div>
+                <div style="font-size:0.72rem; color:#94a3b8;">Passenger {{ forloop.counter }}</div>
+              </div>
+            </div>
+            <div class="pax-detail-row">
+              <span class="pax-detail-label">Gender / Category</span>
+              <span class="pax-detail-value">{{ passenger.get_gender_display }} / {% if passenger.is_child %}Child ({{ passenger.age }}y){% else %}Adult{% endif %}</span>
+            </div>
+            {% if passenger.gender == 'FEMALE' %}
+            <div class="pax-detail-row">
+              <span class="pax-detail-label">Pregnant</span>
+              <span class="pax-detail-value">{% if passenger.is_pregnant %}Yes{% else %}No{% endif %}</span>
+            </div>
+            {% endif %}
+            <div class="pax-detail-row">
+              <span class="pax-detail-label">Assistance</span>
+              <span class="pax-detail-value">{% if passenger.special_assistance %}Yes{% else %}No{% endif %}</span>
+            </div>
+            {% if passenger.special_assistance and passenger.special_assistance_details %}
+            <div class="mt-2" style="font-size:0.7rem; color:#64748b; background:#f8fafc; padding:6px; border-radius:6px; border:1px solid #f1f5f9;">
+                <strong>Assistance Details:</strong><br>{{ passenger.special_assistance_details }}
+            </div>
+            {% endif %}
+            <div class="pax-detail-row">
+              <span class="pax-detail-label">ID Type</span>
+              <span class="pax-detail-value">{{ passenger.get_id_type_display }}</span>
+            </div>
+            <div class="pax-detail-row">
+              <span class="pax-detail-label">ID Number</span>
+              <span class="pax-detail-value">{{ passenger.id_number }}</span>
+            </div>
+            
+            <div class="mt-3 pt-2 border-top">
+              <div style="font-size:0.65rem; font-weight:800; color:#2563eb; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:5px;">Digital Tickets</div>
+                <style>
+                  [data-theme="dark"] .pax-detail-row .fw-800,
+                  [data-theme="dark"] .pax-detail-row .fw-bold,
+                  [data-theme="dark"] .pax-detail-row .text-muted,
+                  [data-theme="dark"] .pax-detail-row .pax-name {
+                    color: #f8fafc !important;
+                  }
+                  [data-theme="dark"] .pax-detail-row,
+                  [data-theme="dark"] .d-flex.justify-content-between.align-items-center.mb-1.p-2.rounded {
+                    background: #1e293b !important;
+                    border-color: #334155 !important;
+                  }
+                  [data-theme="dark"] .pax-detail-row .pax-detail-label {
+                    color: #cbd5e1 !important;
+                  }
+                </style>
+              {% for tkt in passenger.tickets.all %}
+              <div class="d-flex justify-content-between align-items-center mb-1 p-2 rounded" style="background:#f1f5f9; font-size:0.75rem;">
+                <div>
+                  <div class="fw-bold">{{ tkt.airline_name }}</div>
+                  <div class="text-muted" style="font-size:0.65rem;">Flight: {{ tkt.flight_number }}</div>
+                </div>
+                <div class="text-end">
+                  <div class="fw-800" style="font-weight:800; color:#0f172a;">{{ tkt.ticket_number }}</div>
+                </div>
+              </div>
+              {% empty %}
+              <div class="small text-muted italic">No tickets issued yet</div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Payment Info -->
+    <div class="col-lg-5">
+      {% if payment %}
+      <h5 style="font-weight:800; color:#0f172a; margin-bottom:1rem;">
+        <i class="bi bi-credit-card-fill me-2" style="color:#16a34a;"></i>Payment Info
+      </h5>
+      <div class="payment-info-card mb-3">
+        <div class="d-flex justify-content-between mb-2">
+          <span style="font-size:0.82rem; color:#166534;">Transaction ID</span>
+          <code style="font-size:0.82rem; color:#166534;">{{ payment.transaction_id }}</code>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span style="font-size:0.85rem; color:#166534;">Payment Date</span>
+          <span style="font-size:0.85rem; font-weight:700; color:#166534;">{{ payment.payment_date|date:"M j, Y H:i" }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span style="font-size:0.82rem; color:#166534;">Method</span>
+          <span style="font-size:0.82rem; font-weight:600; color:#166534;">{{ payment.payment_method }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span style="font-size:0.82rem; color:#166534;">Per Passenger</span>
+          <span style="font-size:0.82rem; font-weight:600; color:#166534;">₹{{ price_breakdown.per_passenger }}</span>
+        </div>
+        <hr style="border-color:rgba(22,101,52,0.2);">
+        <div class="d-flex justify-content-between">
+          <span style="font-weight:800; color:#166534; font-size:1rem;">Amount Paid</span>
+          <span style="font-weight:900; color:#166534; font-size:1.4rem;">₹{{ booking.total_price }}</span>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="action-bar mt-4">
+    <a href="{% url 'my_bookings' %}" class="btn-action btn-action-outline">
+      <i class="bi bi-list-ul"></i> All Bookings
+    </a>
+    <button class="btn-action btn-action-primary" onclick="window.print()">
+      <i class="bi bi-printer"></i> Print
+    </button>
+    {% if booking.status == 'CONFIRMED' %}
+    <a href="{% url 'cancel_booking' booking.reference %}" class="btn-action btn-action-danger ms-auto">
+      <i class="bi bi-x-circle"></i> Cancel Booking
+    </a>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}

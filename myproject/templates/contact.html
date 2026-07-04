@@ -1,88 +1,296 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% block title %}Contact{% endblock %}
 
+{% block styles %}
+.contact-hero {
+background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%);
+padding: 4rem 0 6rem; position: relative; overflow: hidden;
+}
+.contact-hero::before {
+content:''; position:absolute; top:-40%; right:-10%;
+width:500px; height:500px;
+background:radial-gradient(circle, rgba(124,58,237,0.2) 0%, transparent 70%);
+border-radius:50%;
+}
+.contact-hero h1 {
+color: #fff;
+font-weight: 25;
+font-size: 2rem;
+margin-bottom: 0.5rem;
+position: relative;
+z-index: 2;
+}
+
+.contact-hero p {
+color: rgba(255,255,255,0.6);
+font-size: 0.95rem;
+margin-bottom: 0;
+position: relative;
+z-index: 2;
+}
+.contact-wrapper {
+margin-top: 2rem; position:relative; z-index:10;
+}
+
+.contact-card {
+background:#fff; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.1);
+border:1px solid #e2e8f0; overflow:hidden;
+}
+
+.contact-info-panel {
+background:linear-gradient(160deg, #1d4ed8 0%, #7c3aed 100%);
+padding:2.5rem; color:#fff; display:flex; flex-direction:column; justify-content:center;
+}
+.contact-info-title { font-weight:800; font-size:1.4rem; margin-bottom:0.75rem; }
+.contact-info-text { opacity:0.75; font-size:0.875rem; line-height:1.7; margin-bottom:2rem; }
+.contact-info-item {
+display:flex; align-items:center; gap:14px; margin-bottom:1.25rem;
+}
+.contact-info-icon {
+width:42px; height:42px; border-radius:12px;
+background:rgba(255,255,255,0.12);
+display:flex; align-items:center; justify-content:center;
+font-size:1rem; flex-shrink:0;
+}
+.contact-info-label { font-size:0.72rem; opacity:0.6; text-transform:uppercase; letter-spacing:0.06em; }
+.contact-info-value { font-size:0.9rem; font-weight:600; }
+
+.contact-social { display:flex; gap:10px; margin-top:2rem; }
+.contact-social a {
+width:38px; height:38px; border-radius:10px;
+background:rgba(255,255,255,0.1);
+display:flex; align-items:center; justify-content:center;
+color:rgba(255,255,255,0.7); text-decoration:none;
+transition:all 0.25s; font-size:0.9rem;
+}
+.contact-social a:hover { background:rgba(255,255,255,0.2); color:#fff; transform:translateY(-2px); }
+
+.contact-form-panel { padding:2.5rem; }
+.contact-form-panel h4 { font-weight:800; color:#0f172a; margin-bottom:0.5rem; }
+.contact-form-panel p { color:#64748b; font-size:0.875rem; margin-bottom:2rem; }
+
+.btn-submit-contact {
+width:100%; padding:14px;
+background:linear-gradient(135deg, #2563eb, #7c3aed);
+border:none; border-radius:12px;
+color:#fff; font-weight:700; font-size:1rem;
+box-shadow:0 4px 16px rgba(37,99,235,0.35);
+transition:all 0.25s; cursor:pointer;
+}
+.btn-submit-contact:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(37,99,235,0.45); }
+
+/* FAQ Section */
+.faq-card {
+background:#fff; border-radius:14px; border:1px solid #e2e8f0;
+padding:1.5rem; transition:all 0.25s;
+}
+.faq-card:hover { box-shadow:0 8px 24px rgba(0,0,0,0.06); border-color:#bfdbfe; }
+.faq-icon {
+width:44px; height:44px; border-radius:12px;
+display:flex; align-items:center; justify-content:center;
+font-size:1.2rem; flex-shrink:0;
+}
+
+/* Dark Mode Overrides */
+[data-theme="dark"] .contact-card,
+[data-theme="dark"] .faq-card {
+background: #1e293b !important;
+border-color: #334155 !important;
+color: #f8fafc !important;
+}
+[data-theme="dark"] .contact-form-panel h4,
+[data-theme="dark"] .faq-card h6,
+[data-theme="dark"] h2 {
+color: #f8fafc !important;
+}
+[data-theme="dark"] .input-group-text {
+background: #0f172a !important;
+border-color: #334155 !important;
+color: #94a3b8 !important;
+}
+[data-theme="dark"] .faq-icon {
+background: #0f172a !important;
+}
+[data-theme="dark"] .contact-form-panel p {
+color: #94a3b8 !important;
+}
+[data-theme="dark"] .form-control {
+background: #0f172a !important;
+border-color: #334155 !important;
+color: #f8fafc !important;
+}
+{% endblock %}
+
 {% block body %}
-<style>
-  .contact-container {
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
-    padding: 2rem;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  }
-  
-  .contact-image-container {
-    background-color: rgba(255, 255, 255, 0.8);
-    padding: 15px;
-    border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-  }
-  
-  .form-control:focus {
-    border-color: #6c8ae4;
-    box-shadow: 0 0 0 0.25rem rgba(108, 138, 228, 0.25);
-  }
-</style>
+<!-- Hero -->
 
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-md-10 col-lg-8">
-      <div class="contact-container">
-        <h1 class="text-center mb-4" style="color: #2c3e50;">Contact Us</h1>
 
-        <!-- Contact image with improved container -->
-        <div class="contact-image-container text-center mb-4">
-          <img src="https://wallpaperaccess.com/full/254381.jpg" 
-               alt="Contact Us" 
-               class="img-fluid rounded-3" 
-               style="max-height: 250px; object-fit: cover; width: 100%; border: 2px solid #e9ecef;">
+<div class="container contact-wrapper">
+  <div class="contact-card">
+    <div class="row g-0">
+      <!-- Left Info Panel -->
+      <div class="col-lg-5 contact-info-panel">
+        <div class="contact-info-title">Contact Information</div>
+        <div class="contact-info-text">Fill out the form and our team will get back to you within 24 hours.</div>
+
+        <div class="contact-info-item">
+          <div class="contact-info-icon"><i class="bi bi-telephone-fill"></i></div>
+          <div>
+            <div class="contact-info-label">Phone</div>
+            <div class="contact-info-value">+91 98765 43210</div>
+          </div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-info-icon"><i class="bi bi-envelope-fill"></i></div>
+          <div>
+            <div class="contact-info-label">Email</div>
+            <div class="contact-info-value">support@skywings.in</div>
+          </div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-info-icon"><i class="bi bi-geo-alt-fill"></i></div>
+          <div>
+            <div class="contact-info-label">Office</div>
+            <div class="contact-info-value">Mumbai, Maharashtra, India</div>
+          </div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-info-icon"><i class="bi bi-clock-fill"></i></div>
+          <div>
+            <div class="contact-info-label">Hours</div>
+            <div class="contact-info-value">24/7 Support Available</div>
+          </div>
         </div>
 
-        <form method="post" action="/contact" class="px-3">
+        <div class="contact-social">
+          <a href="#"><i class="bi bi-twitter-x"></i></a>
+          <a href="#"><i class="bi bi-facebook"></i></a>
+          <a href="#"><i class="bi bi-instagram"></i></a>
+          <a href="#"><i class="bi bi-linkedin"></i></a>
+        </div>
+      </div>
+
+      <!-- Right Form Panel -->
+      <div class="col-lg-7 contact-form-panel">
+        <h4>Send us a Message</h4>
+        <p>We'll respond to your inquiry as quickly as possible.</p>
+
+        <form method="post" action="/contact">
           {% csrf_token %}
-
-          <div class="mb-4">
-            <label for="name" class="form-label fw-semibold" style="color: #34495e;">
-              Full Name <span class="text-danger">*</span>
-            </label>
-            <input type="text" class="form-control py-2" id="name" name="name" placeholder="Your Name" required>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Full Name <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"
+                  style="border-radius:10px 0 0 10px; border:1.5px solid #e2e8f0;">
+                  <i class="bi bi-person text-muted"></i>
+                </span>
+                <input type="text" class="form-control" name="name" placeholder="Full Name" required
+                  style="border-radius:0 10px 10px 0; border:1.5px solid #e2e8f0; border-left:none;">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email Address <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"
+                  style="border-radius:10px 0 0 10px; border:1.5px solid #e2e8f0;">
+                  <i class="bi bi-envelope text-muted"></i>
+                </span>
+                <input type="email" class="form-control" name="email" placeholder="name@example.com" required
+                  style="border-radius:0 10px 10px 0; border:1.5px solid #e2e8f0; border-left:none;">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"
+                  style="border-radius:10px 0 0 10px; border:1.5px solid #e2e8f0;">
+                  <i class="bi bi-telephone text-muted"></i>
+                </span>
+                <input type="tel" class="form-control" name="phone" placeholder="+91 XXXXX XXXXX" required
+                  style="border-radius:0 10px 10px 0; border:1.5px solid #e2e8f0; border-left:none;">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Zip Code <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"
+                  style="border-radius:10px 0 0 10px; border:1.5px solid #e2e8f0;">
+                  <i class="bi bi-geo-alt text-muted"></i>
+                </span>
+                <input type="text" class="form-control" name="pincode" placeholder="123456" required
+                  style="border-radius:0 10px 10px 0; border:1.5px solid #e2e8f0; border-left:none;">
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Message <span class="text-danger">*</span></label>
+              <textarea class="form-control" name="message" rows="5" placeholder="Tell us how we can help you..."
+                required></textarea>
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn-submit-contact">
+                <i class="bi bi-send-fill me-2"></i>Send Message
+              </button>
+            </div>
           </div>
-
-          <div class="mb-4">
-            <label for="email" class="form-label fw-semibold" style="color: #34495e;">
-              Email Address <span class="text-danger">*</span>
-            </label>
-            <input type="email" class="form-control py-2" id="email" name="email" placeholder="name@example.com" required>
-          </div>
-
-          <div class="mb-4">
-            <label for="phone" class="form-label fw-semibold" style="color: #34495e;">
-              Phone Number <span class="text-danger">*</span>
-            </label>
-            <input type="tel" class="form-control py-2" id="phone" name="phone" placeholder="Phone Number" required>
-          </div>
-
-          <div class="mb-4">
-            <label for="pincode" class="form-label fw-semibold" style="color: #34495e;">
-              Pincode/Zip Code <span class="text-danger">*</span>
-            </label>
-            <input type="text" class="form-control py-2" id="pincode" name="pincode" placeholder="Enter your pincode" required 
-                   pattern="[0-9]{5,6}" title="Please enter a valid 5 or 6 digit pincode">
-          </div>
-
-          <div class="mb-4">
-            <label for="message" class="form-label fw-semibold" style="color: #34495e;">
-              Message <span class="text-danger">*</span>
-            </label>
-            <textarea class="form-control py-2" id="message" name="message" rows="5" placeholder="Your message..." required></textarea>
-          </div>
-
-          <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" style="background-color: #4a6bdf; border: none; font-size: 1.05rem;">
-            Submit Message
-          </button>
         </form>
       </div>
     </div>
   </div>
 </div>
 
+<!-- FAQ Section -->
+<div class="container py-5" style="margin-top:1.5rem;">
+  <div class="text-center mb-4">
+    <div
+      style="display:inline-flex; align-items:center; gap:8px; background:#eff6ff; color:#2563eb; padding:6px 14px; border-radius:99px; font-size:0.75rem; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; margin-bottom:1rem;">
+      <i class="bi bi-question-circle-fill"></i> FAQ
+    </div>
+    <h2 style="font-size:2rem; font-weight:800; color:#0f172a;">Frequently Asked Questions</h2>
+  </div>
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="faq-card d-flex gap-3">
+        <div class="faq-icon" style="background:#eff6ff; color:#2563eb;"><i class="bi bi-clock-fill"></i></div>
+        <div>
+          <h6 style="font-weight:700; color:#0f172a; margin-bottom:4px;">How long does a refund take?</h6>
+          <p style="font-size:0.82rem; color:#64748b; margin:0; line-height:1.6;">Refunds are processed within 5–7
+            business days, depending on your bank.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="faq-card d-flex gap-3">
+        <div class="faq-icon" style="background:#f0fdf4; color:#16a34a;"><i class="bi bi-arrow-clockwise"></i></div>
+        <div>
+          <h6 style="font-weight:700; color:#0f172a; margin-bottom:4px;">Can I change my flight date?</h6>
+          <p style="font-size:0.82rem; color:#64748b; margin:0; line-height:1.6;">Yes, you can cancel and rebook at any
+            time. Free cancellation available.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="faq-card d-flex gap-3">
+        <div class="faq-icon" style="background:#fef3c7; color:#d97706;"><i class="bi bi-credit-card-fill"></i></div>
+        <div>
+          <h6 style="font-weight:700; color:#0f172a; margin-bottom:4px;">What payment methods do you accept?</h6>
+          <p style="font-size:0.82rem; color:#64748b; margin:0; line-height:1.6;">We accept Visa, Mastercard, American
+            Express, RuPay, and PayPal.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="faq-card d-flex gap-3">
+        <div class="faq-icon" style="background: linear-gradient(135deg, #8b5cf6, #6366f1); color: #ffffff;">
+          <i class="bi bi-shield-check-fill"></i>
+        </div>
+        <div>
+          <h6 style="font-weight:700; color:#0f172a; margin-bottom:4px;">Is my data secure?</h6>
+          <p style="font-size:0.82rem; color:#64748b; margin:0; line-height:1.6;">Absolutely. We use 256-bit SSL
+            encryption and never store your card details.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock body %}

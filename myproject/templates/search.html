@@ -1,70 +1,717 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
+{% block title %}Search Flights{% endblock %}
 
-{% block title %}Flight Search{% endblock %}
+{% block styles %}
+<style>
+.search-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1e40af 100%);
+  padding: 1.5rem 0 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
 
-{% block body %}
-{% load static %}
+.search-hero::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -10%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
+}
 
-<div class="container my-5">
-  <div class="card">
-    <div class="card-header bg-primary text-white">
-      <h4 class="mb-0">Find Your Flight</h4>
-    </div>
-    <div class="card-body">
-      <form method="POST">
-        {% csrf_token %}
-        <div class="row g-3">
-          <div class="col-md-3">
-            <label for="departure" class="form-label">From</label>
-            <select class="form-select" id="departure" name="departure" required>
-              <option value="">Select airport</option>
-              {% for airport in airports %}
-              <option value="{{ airport.id }}">{{ airport.city }} ({{ airport.code }})</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-3">
-            <label for="arrival" class="form-label">To</label>
-            <select class="form-select" id="arrival" name="arrival" required>
-              <option value="">Select airport</option>
-              {% for airport in airports %}
-              <option value="{{ airport.id }}">{{ airport.city }} ({{ airport.code }})</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-2">
-            <label for="date" class="form-label">Departure Date</label>
-            <input type="date" class="form-control" id="date" name="date" required min="{{ today }}">
-          </div>
-          <div class="col-md-2">
-            <label for="passengers" class="form-label">Passengers</label>
-            <input type="number" class="form-control" id="passengers" name="passengers" min="1" max="10" value="1"
-              required>
-          </div>
-          <div class="col-md-2">
-            <label for="class" class="form-label">Class</label>
-            <select class="form-select" id="class" name="class">
-              <option value="ECONOMY">Economy</option>
-              <option value="BUSINESS">Business</option>
-              <option value="FIRST">First Class</option>
-            </select>
-          </div>
-          <div class="col-md-12 mt-3">
-            <button type="submit" class="btn btn-primary">Search Flights</button>
-          </div>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
+.search-hero h1 {
+  color: #fff;
+  font-weight: 800;
+  font-size: 2.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.search-hero p {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 1rem;
+}
+
+.search-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  margin-top: 1rem;
+  border: 1px solid #e2e8f0;
+  position: relative;
+  z-index: 10;
+}
+
+.trip-toggle {
+  display: flex;
+  gap: 0;
+  background: #f1f5f9;
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 1.5rem;
+  width: fit-content;
+}
+
+.trip-toggle label {
+  padding: 7px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+  transition: all 0.2s;
+}
+
+.trip-toggle input {
+  display: none;
+}
+
+.trip-toggle input:checked+label {
+  background: #fff;
+  color: #2563eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.fare-toggle {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.fare-toggle input {
+  display: none;
+}
+
+.fare-toggle label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fare-toggle input:checked + label {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+  box-shadow: 0 8px 22px rgba(37, 99, 235, 0.14);
+}
+
+.student-discount-note {
+  display: none;
+  margin-top: 6px;
+  color: #16a34a;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.search-form .form-control,
+.search-form .form-select {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.search-form .form-control:focus,
+.search-form .form-select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.search-form label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.input-with-icon {
+  position: relative;
+}
+
+.input-with-icon .input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #2563eb;
+  font-size: 1rem;
+  z-index: 2;
+}
+
+.input-with-icon .form-control {
+  padding-left: 38px;
+}
+
+.btn-search {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+  transition: all 0.25s;
+}
+
+.btn-search:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.45);
+}
+
+/* Calendar Styling */
+.calendar-container {
+  display: none;
+  background: #fff;
+  border-radius: 20px;
+  padding: 1rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  border: 1px solid #e2e8f0;
+  width: 350px;
+  margin-top: 10px;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding: 0 0.5rem;
+}
+
+.calendar-header h5 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendar-day-label {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  padding-bottom: 8px;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  border: 1px solid transparent;
+  font-size: 0.9rem;
+}
+
+.calendar-day:hover:not(.empty) {
+  background: #f1f5f9;
+}
+
+.calendar-day.active {
+  background: #2563eb !important;
+  color: #fff !important;
+  border-color: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+  transform: scale(1.05);
+  z-index: 5;
+}
+
+.calendar-day.has-flights {
+  font-weight: 700;
+}
+
+.calendar-day .dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #2563eb;
+  position: absolute;
+  bottom: 4px;
+}
+
+.calendar-day.active .dot {
+  background: #fff;
+}
+
+.calendar-day .price {
+  font-size: 0.65rem;
+  color: #16a34a;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.calendar-day.active .price {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.calendar-day.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.flight-details-list {
+  display: none;
+  margin-top: 1.5rem;
+}
+
+.flight-details-list h6 {
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 0.75rem;
+}
+
+.flight-mini-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+}
+
+.flight-mini-main {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.flight-mini-logo,
+.flight-mini-logo-fallback {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  flex: 0 0 46px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.flight-mini-logo {
+  object-fit: contain;
+  padding: 5px;
+}
+
+.flight-mini-logo-fallback {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #dbeafe, #fff);
+  color: #1d4ed8;
+  font-weight: 900;
+  font-size: 0.7rem;
+}
+
+.flight-mini-airline {
+  font-weight: 800;
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.flight-mini-route {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.flight-mini-price {
+  color: #2563eb;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+@media (max-width: 575.98px) {
+  .flight-mini-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+[data-theme="dark"] .search-card, 
+[data-theme="dark"] .calendar-container,
+[data-theme="dark"] .flight-mini-card,
+[data-theme="dark"] .trip-toggle input:checked+label {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .flight-details-list h6,
+[data-theme="dark"] .flight-mini-airline {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .trip-toggle {
+  background: #0f172a !important;
+}
+
+[data-theme="dark"] .fare-toggle label {
+  background: #0f172a;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .fare-toggle input:checked + label {
+  background: rgba(37, 99, 235, 0.16);
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .calendar-day:hover:not(.empty) {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .search-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .search-form label,
+[data-theme="dark"] .search-form .form-label {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .fare-toggle label,
+[data-theme="dark"] .calendar-header h5,
+[data-theme="dark"] .flight-mini-airline,
+[data-theme="dark"] h1 {
+  color: #f8fafc !important;
+}
+
+#selectedDateInput.has-value {
+  border-color: #2563eb;
+  background-color: #eff6ff;
+  font-weight: 700;
+  color: #1e40af;
+}
+
+[data-theme="dark"] #selectedDateInput.has-value {
+  background-color: #0f172a;
+  color: #60a5fa;
+}
+</style>
 {% endblock %}
 
-{% block scripts %}
+{% block body %}
+<!-- Hero -->
+<div class="search-hero">
+  <div class="container text-center">
+    <h1><i class="bi bi-airplane me-2"></i>Find Your Flight</h1>
+    <p>Select your destination to see available dates and best prices.</p>
+  </div>
+</div>
+
+<div class="container" style="max-width:900px;">
+  <div class="search-card">
+    <form id="searchForm" method="POST" action="{% url 'flight_search' %}">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label>From</label>
+          <div class="input-with-icon">
+            <i class="bi bi-geo-alt input-icon"></i>
+            <select name="departure" id="departureSelect" class="form-select" required style="padding-left: 2.5rem;">
+              <option value="">Select departure city</option>
+              {% for airport in airports %}
+              <option value="{{ airport.id }}">{{ airport.city }} ({{ airport.code }})</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label>To</label>
+          <div class="input-with-icon">
+            <i class="bi bi-geo input-icon"></i>
+            <select name="arrival" id="arrivalSelect" class="form-select" required style="padding-left: 2.5rem;">
+              <option value="">Select destination city</option>
+              {% for airport in airports %}
+              <option value="{{ airport.id }}">{{ airport.city }} ({{ airport.code }})</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label>Passengers</label>
+          <div class="input-with-icon">
+            <select name="passengers" id="passengersSelect" class="form-select">
+              <option value="1">1 Passenger</option>
+              <option value="2">2 Passengers</option>
+              <option value="3">3 Passengers</option>
+              <option value="4">4 Passengers</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label>Cabin Class</label>
+          <select name="class" id="classSelect" class="form-select">
+            <option value="ECONOMY">Economy</option>
+            <option value="BUSINESS">Business</option>
+            <option value="FIRST">First Class</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label>Fare Type</label>
+          <div class="fare-toggle">
+            <input type="radio" name="fare_type" id="fareNormal" value="NORMAL" checked>
+            <label for="fareNormal"><i class="bi bi-person"></i>Normal</label>
+            <input type="radio" name="fare_type" id="fareStudent" value="STUDENT">
+            <label for="fareStudent"><i class="bi bi-mortarboard"></i>Student</label>
+          </div>
+          <div class="student-discount-note" id="studentDiscountNote">Student fare applies 10% discount.</div>
+        </div>
+        <div class="col-md-4" style="position: relative;">
+          <label>Selected Date</label>
+          <div class="input-with-icon">
+            <i class="bi bi-calendar-check input-icon"></i>
+            <input type="text" name="date" id="selectedDateInput" class="form-control" style="padding-left: 2.5rem; cursor: pointer;" readonly placeholder="Pick from calendar" required>
+          </div>
+          
+          <!-- Calendar View (Popover) -->
+          <div class="calendar-container" id="calendarContainer">
+            <div class="calendar-header">
+              <h5 class="mb-0 fw-bold" id="monthDisplay">Month Year</h5>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="prevMonth"><i class="bi bi-chevron-left"></i></button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="nextMonth"><i class="bi bi-chevron-right"></i></button>
+              </div>
+            </div>
+            <div class="calendar-grid" id="calendarGrid">
+              <!-- Generated by JS -->
+            </div>
+          </div>
+        </div>
+        <div class="col-12 mt-2">
+          <button type="submit" class="btn-search" id="searchBtn" disabled>
+            <i class="bi bi-search me-2"></i>Search Flights
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div id="noFlightsMsg" class="text-center py-4" style="display:none;">
+    <p class="text-danger small fw-bold mb-0">No flights available for this route.</p>
+  </div>
+
+  <div class="flight-details-list" id="flightDetailsList">
+    <h6 id="detailDateDisplay">Available flights</h6>
+      <style>
+        /* Light mode: Make Available Flights heading more visible */
+        #detailDateDisplay {
+          color: #1d4ed8;
+          font-weight: 900;
+          font-size: 1.1rem;
+          letter-spacing: 0.02em;
+          text-shadow: 0 1px 4px #e0e7ef;
+        }
+        [data-theme="dark"] #detailDateDisplay {
+          color: #f8fafc !important;
+          text-shadow: none;
+        }
+      </style>
+    <div id="flightListItems"></div>
+  </div>
+</div>
+
 <script>
-  // Set today's date as default
-  document.addEventListener('DOMContentLoaded', function () {
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('date').value = today;
+document.addEventListener('DOMContentLoaded', function() {
+  const depSelect = document.getElementById('departureSelect');
+  const arrSelect = document.getElementById('arrivalSelect');
+  const passSelect = document.getElementById('passengersSelect');
+  const classSelect = document.getElementById('classSelect');
+  const dateInput = document.getElementById('selectedDateInput');
+  const searchBtn = document.getElementById('searchBtn');
+  const calendarContainer = document.getElementById('calendarContainer');
+  const calendarGrid = document.getElementById('calendarGrid');
+  const monthDisplay = document.getElementById('monthDisplay');
+  const flightDetailsList = document.getElementById('flightDetailsList');
+  const flightListItems = document.getElementById('flightListItems');
+  const detailDateDisplay = document.getElementById('detailDateDisplay');
+  const noFlightsMsg = document.getElementById('noFlightsMsg');
+
+  let currentYear = new Date().getFullYear();
+  let currentMonth = new Date().getMonth();
+  let availabilityData = {};
+  let selectedDate = null;
+
+  async function fetchAvailability() {
+    const dep = depSelect.value;
+    const arr = arrSelect.value;
+    const passengers = passSelect.value;
+    const travelClass = classSelect.value;
+
+    if (!dep || !arr) {
+      calendarContainer.style.display = 'none';
+      flightDetailsList.style.display = 'none';
+      noFlightsMsg.style.display = 'none';
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/flight-availability/?departure=${dep}&arrival=${arr}&passengers=${passengers}&class=${travelClass}`);
+      availabilityData = await response.json();
+      
+      if (Object.keys(availabilityData).length === 0) {
+        noFlightsMsg.style.display = 'block';
+        searchBtn.disabled = true;
+      } else {
+        noFlightsMsg.style.display = 'none';
+        renderCalendar();
+      }
+    } catch (e) {
+      console.error("Fetch error:", e);
+    }
+  }
+
+  function renderCalendar() {
+    calendarGrid.innerHTML = '';
+    const dayLabels = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+    dayLabels.forEach(label => {
+      const el = document.createElement('div');
+      el.className = 'calendar-day-label';
+      el.textContent = label;
+      calendarGrid.appendChild(el);
+    });
+
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    
+    monthDisplay.textContent = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date(currentYear, currentMonth));
+
+    // Fill empty slots
+    for (let i = 0; i < firstDay; i++) {
+      const el = document.createElement('div');
+      el.className = 'calendar-day empty';
+      calendarGrid.appendChild(el);
+    }
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(currentYear, currentMonth, d);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      
+      const el = document.createElement('div');
+      el.className = 'calendar-day';
+      
+      const dayNum = document.createElement('span');
+      dayNum.textContent = d;
+      el.appendChild(dayNum);
+
+      if (date < today) {
+        el.classList.add('disabled');
+      } else if (availabilityData[dateStr]) {
+        el.classList.add('has-flights');
+        
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        el.appendChild(dot);
+
+        const price = document.createElement('div');
+        price.className = 'price';
+        price.textContent = '₹' + availabilityData[dateStr].min_price;
+        el.appendChild(price);
+
+        el.onclick = () => selectDate(dateStr, availabilityData[dateStr]);
+      }
+
+      if (selectedDate === dateStr) el.classList.add('active');
+
+      calendarGrid.appendChild(el);
+    }
+  }
+
+  function selectDate(dateStr, data) {
+    selectedDate = dateStr;
+    dateInput.value = dateStr;
+    dateInput.classList.add('has-value');
+    searchBtn.disabled = false;
+    calendarContainer.style.display = 'none';
+    renderFlightDetails(dateStr, data.flights || []);
+    renderCalendar();
+  }
+
+  function renderFlightDetails(dateStr, flights) {
+    detailDateDisplay.textContent = `Available flights on ${dateStr}`;
+    flightListItems.innerHTML = flights.map(flight => {
+      const logo = flight.airline_logo
+        ? `<img src="${flight.airline_logo}" alt="${flight.airline}" class="flight-mini-logo">`
+        : `<span class="flight-mini-logo-fallback">${flight.airline_code}</span>`;
+
+      const isStudent = document.getElementById('fareStudent').checked;
+      const studentBadge = isStudent ? '<div style="font-size:0.72rem;color:#16a34a;font-weight:800;margin-left:6px;">10% off</div>' : '';
+      return `
+        <div class="flight-mini-card">
+          <div class="flight-mini-main">
+            ${logo}
+            <div>
+              <div class="flight-mini-airline">${flight.airline} ${flight.airline_code}${flight.flight_number}</div>
+              <div class="flight-mini-route">${flight.departure_time} &rarr; ${flight.arrival_time} &bull; ${flight.duration}</div>
+            </div>
+          </div>
+          <div class="flight-mini-price">` + (isStudent ? ` <span style="text-decoration:line-through;color:#6b7280;font-weight:700;">&#8377;${flight.price}</span> <span style="color:#16a34a;font-weight:900;margin-left:6px;">&#8377;${(Math.round((flight.price*0.9)*100)/100)}</span>${studentBadge}` : `&#8377;${flight.price}`) + `</div>
+        </div>
+      `;
+    }).join('');
+    flightDetailsList.style.display = flights.length ? 'block' : 'none';
+  }
+
+  dateInput.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (Object.keys(availabilityData).length > 0) {
+      const isVisible = calendarContainer.style.display === 'block';
+      calendarContainer.style.display = isVisible ? 'none' : 'block';
+    }
   });
+
+  document.addEventListener('click', function(e) {
+    if (!calendarContainer.contains(e.target) && e.target !== dateInput) {
+      calendarContainer.style.display = 'none';
+    }
+  });
+
+  depSelect.addEventListener('change', fetchAvailability);
+  arrSelect.addEventListener('change', fetchAvailability);
+  passSelect.addEventListener('change', fetchAvailability);
+  classSelect.addEventListener('change', fetchAvailability);
+
+  document.getElementById('prevMonth').onclick = () => { currentMonth--; if(currentMonth < 0){ currentMonth=11; currentYear--; } renderCalendar(); };
+  document.getElementById('nextMonth').onclick = () => { currentMonth++; if(currentMonth > 11){ currentMonth=0; currentYear++; } renderCalendar(); };
+});
 </script>
 {% endblock %}

@@ -1,197 +1,524 @@
 {% extends 'base.html' %}
-
+{% load flight_extras %}
 {% block title %}Payment - Flight Booking{% endblock %}
 
-{% block body %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0">Complete Your Payment</h3>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-4">  <!-- Fixed: Added missing 'div' -->
-                        <div class="col-md-6">
-                            <h5>Booking Summary</h5>
-                            <div class="card bg-light">
-                                <div class="card-body">
-                                    <p class="mb-1"><strong>Reference:</strong> {{ booking.reference }}</p>
-                                    <p class="mb-1"><strong>Flight:</strong> {{ booking.flight.airline.code }}{{ booking.flight.flight_number }}</p>
-                                    <p class="mb-1"><strong>Departure:</strong> {{ booking.flight.departure_time|date:"M d, Y" }} at {{ booking.flight.departure_time|time }}</p>
-                                    <p class="mb-1"><strong>Passengers ({{ booking.nums_passengers }}):</strong></p>
-                                    <ul class="mb-2 list-unstyled">
-                                        {% for passenger in passengers %}
-                                        <li class="mb-2 pb-2 border-bottom">
-                                            <strong>{{ passenger.first_name }} {{ passenger.last_name }}</strong><br>
-                                            <small class="text-muted">
-                                                <i class="bi bi-calendar"></i> DOB: {{ passenger.date_of_birth|date:"M d, Y" }} | 
-                                                <i class="bi bi-person-badge"></i> {{ passenger.get_id_type_display }}: {{ passenger.id_number }}
-                                            </small>
-                                        </li>
-                                        {% endfor %}
-                                    </ul>
-                                    <p class="mb-1"><strong>Class:</strong> {{ booking.travel_class }}</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <h5>Payment Summary</h5>
-                            <div class="card bg-light">
-                                <div class="card-body">
-                                    <table class="table table-sm">
-                                        <!-- Show base fare calculation -->
-                                        <tr>
-                                            <td>Base Fare ({{ booking.nums_passengers }} Ã— INR {{ booking.per_passenger_price|floatformat:2 }}):</td>
-                                            <td class="text-end">INR {{ booking.total_price|floatformat:2 }}</td>
-                                        </tr>
-                                        
-                                        <!-- Show breakdown per passenger -->
-                                        {% for i in "x"|rjust:booking.nums_passengers %}
-                                        <tr>
-                                            <td>Passenger {{ forloop.counter }} Fare:</td>
-                                            <td class="text-end">INR {{ booking.per_passenger_price|floatformat:2 }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                        
-                                        {% if discount %}
-                                        <tr class="text-success">
-                                            <td>Discount (First Booking):</td>
-                                            <td class="text-end">-INR {{ discount|floatformat:2 }}</td>
-                                        </tr>
-                                        {% endif %}
-                                        
-                                        <tr class="table-active fw-bold">
-                                            <td>Total Amount:</td>
-                                            <td class="text-end" id="final-amount">INR {% if coupon_applied %}{{ final_price|floatformat:2 }}{% else %}{{ booking.total_price|floatformat:2 }}{% endif %}</td>
-                                        </tr>
-                                    </table>
-                                    
-                                    <!-- Verification message -->
-                                    {% if passengers|length != booking.nums_passengers %}
-                                    <div class="alert alert-warning mt-2">
-                                        <i class="bi bi-exclamation-triangle"></i> 
-                                        Note: Showing {{ passengers|length }} passengers of {{ booking.nums_passengers }} booked
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+{% block styles %}
+<style>
+.payment-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%);
+  padding: 2.5rem 0 1.5rem;
+}
+.payment-hero h1 { color:#fff; font-weight:800; font-size:1.8rem; margin:0; }
 
-                    <form method="POST" id="payment-form">
-                        {% csrf_token %}
-                        
-                        <!-- Coupon Code Section -->
-                        <div class="card mb-4 border-success">
-                            <div class="card-body">
-                                <h5 class="card-title text-success"><i class="bi bi-tag-fill"></i> Have a Coupon?</h5>
-                                <div class="input-group">
-                                    <input type="text" name="coupon_code" class="form-control" placeholder="Enter coupon code" id="coupon-input" value="{{ coupon_applied|default:'' }}">
-                                    <button class="btn btn-outline-success" type="submit" name="apply_coupon" value="1">Apply</button>
-                                </div>
-                                <small class="text-muted mt-1 d-block">Use <strong>UDAAAN</strong> for 100% off on your 1st booking!</small>
-                            </div>
-                        </div>
+/* Steps */
+.booking-steps { display:flex; align-items:center; justify-content:center; gap:0; background:#fff; border-radius:16px; border:1px solid #e2e8f0; padding:1.25rem 2rem; margin-bottom:2rem; }
+.step-circle { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.85rem; }
+.step-circle.active { background:linear-gradient(135deg,#2563eb,#7c3aed); color:#fff; }
+.step-circle.done { background:#dcfce7; color:#16a34a; }
+.step-circle.pending { background:#f1f5f9; color:#94a3b8; }
+.step-label { font-size:0.8rem; font-weight:700; color:#0f172a; }
+.step-label.pending { color:#94a3b8; }
+.step-connector { width:60px; height:2px; background:#e2e8f0; margin:0 8px; }
+.step-item { display:flex; align-items:center; gap:10px; }
 
-                        <h5 class="mb-3">Payment Method</h5>
-                        
-                        <div class="mb-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="payment_method" id="credit-card" value="credit_card" checked>
-                                <label class="form-check-label fw-bold" for="credit-card">
-                                    <i class="bi bi-credit-card"></i> Credit/Debit Card
-                                </label>
-                            </div>
-                            <div id="credit-card-form" class="mt-3 p-3 border rounded">
-                                <div class="row g-3">
-                                    <div class="col-md-12">
-                                        <label for="card-number" class="form-label">Card Number</label>
-                                        <input type="text" class="form-control" id="card-number" placeholder="1234 5678 9012 3456">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="card-name" class="form-label">Name on Card</label>
-                                        <input type="text" class="form-control" id="card-name" placeholder="John Doe">
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label for="card-expiry" class="form-label">Expiry Date</label>
-                                        <input type="text" class="form-control" id="card-expiry" placeholder="MM/YY">
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label for="card-cvv" class="form-label">CVV</label>
-                                        <input type="text" class="form-control" id="card-cvv" placeholder="123">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+/* Booking summary */
+.summary-card {
+  background:#fff; border-radius:16px; border:1px solid #e2e8f0; overflow:hidden;
+}
+.summary-card-header {
+  background:linear-gradient(135deg,#eff6ff,#f5f3ff);
+  border-bottom:1px solid #e2e8f0; padding:1.25rem 1.5rem;
+}
+.summary-card-header h6 { font-weight:800; color:#0f172a; margin:0; font-size:1rem; }
+.summary-card-body { padding:1.5rem; }
 
-                        <div class="mb-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="payment_method" id="paypal" value="paypal">
-                                <label class="form-check-label fw-bold" for="paypal">
-                                    <i class="bi bi-paypal"></i> PayPal
-                                </label>
-                            </div>
-                        </div>
+/* Route in summary */
+.route-mini { display:flex; align-items:center; gap:12px; margin-bottom:1rem; }
+.route-mini-city { font-size:1.2rem; font-weight:800; color:#0f172a; }
+.route-mini-code { font-size:0.72rem; color:#94a3b8; }
+.route-mini-line { flex:1; border-top:2px dashed #e2e8f0; position:relative; margin:0 8px; }
+.route-mini-plane { color:#2563eb; }
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" name="complete_payment" value="1" class="btn btn-primary btn-lg">
-                                <i class="bi bi-lock-fill"></i> Pay INR {{ final_price|default:booking.total_price|floatformat:2 }}
-                            </button>
-                            <a href="{% url 'booking_detail' booking.reference %}" class="btn btn-outline-secondary">
-                                Back to Booking Details
-                            </a>
-                        </div>
-                    </form>
-                </div>
-                <div class="card-footer bg-light">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-muted">
-                            <i class="bi bi-shield-lock"></i> Secure Payment
-                        </small>
-                        <div>
-                            <img src="https://via.placeholder.com/40" alt="Visa" class="img-thumbnail border-0">
-                            <img src="https://via.placeholder.com/40" alt="Mastercard" class="img-thumbnail border-0">
-                            <img src="https://via.placeholder.com/40" alt="Amex" class="img-thumbnail border-0">
-                            <img src="https://via.placeholder.com/40" alt="PayPal" class="img-thumbnail border-0">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+/* Passenger list */
+.pax-item { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid #f8fafc; }
+.pax-item:last-child { border-bottom:none; }
+.pax-avatar { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#eff6ff,#dbeafe); display:flex; align-items:center; justify-content:center; color:#2563eb; font-size:0.85rem; }
+.pax-name { font-weight:700; font-size:0.875rem; color:#0f172a; }
+.pax-details { font-size:0.72rem; color:#94a3b8; }
+
+/* Price table */
+.price-line { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f8fafc; font-size:0.875rem; }
+.price-line.total { border-top:2px solid #e2e8f0; border-bottom:none; padding-top:12px; margin-top:4px; }
+.price-line.discount { color:#16a34a; }
+
+/* Payment method */
+.payment-method-card {
+  background:#fff; border-radius:16px; border:1px solid #e2e8f0; overflow:hidden; margin-bottom:1rem;
+}
+.payment-method-header { padding:1.25rem 1.5rem; border-bottom:1px solid #f1f5f9; background:#f8fafc; }
+.method-option {
+  border:2px solid #e2e8f0; border-radius:12px; padding:1.25rem;
+  cursor:pointer; transition:all 0.2s; margin-bottom:1rem;
+}
+.method-option.selected { border-color:#2563eb; background:#eff6ff; }
+.method-option input[type="radio"] { display:none; }
+.method-label { display:flex; align-items:center; gap:12px; cursor:pointer; margin:0; width:100%; }
+.method-icon { width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; }
+.method-icon.card-icon { background:#eff6ff; color:#2563eb; }
+.method-icon.paypal-icon { background:#fff8e1; color:#f59e0b; }
+.method-name { font-weight:700; color:#0f172a; }
+.method-sub { font-size:0.75rem; color:#94a3b8; }
+
+/* Coupon section */
+.coupon-card {
+  border:2px dashed #86efac; border-radius:14px; padding:1.25rem;
+  background:linear-gradient(135deg,#f0fdf4,#dcfce7);
+  margin-bottom:1.5rem;
+}
+.coupon-card label { font-weight:700; color:#166534; font-size:0.85rem; margin-bottom:8px; display:block; }
+
+/* Card form */
+.card-form { background:#f8fafc; border-radius:12px; padding:1.25rem; border:1px solid #f1f5f9; margin-top:1rem; }
+
+/* Payment logos */
+.payment-logos { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.payment-logo { background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:6px 12px; height:36px; display:flex; align-items:center; }
+.payment-logo img { height:20px; width:auto; object-fit:contain; }
+
+.btn-pay {
+  width:100%; padding:16px;
+  background:linear-gradient(135deg,#2563eb,#7c3aed);
+  border:none; border-radius:12px;
+  color:#fff; font-weight:800; font-size:1.05rem;
+  box-shadow:0 4px 16px rgba(37,99,235,0.35);
+  transition:all 0.25s; cursor:pointer;
+}
+.btn-pay:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(37,99,235,0.45); color:#fff; }
+
+/* Dark Mode Overrides */
+[data-theme="dark"] .booking-steps,
+[data-theme="dark"] .summary-card,
+[data-theme="dark"] .payment-method-card,
+[data-theme="dark"] .method-option,
+[data-theme="dark"] .card-form,
+[data-theme="dark"] .payment-logo {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .summary-card-header,
+[data-theme="dark"] .payment-method-header {
+  background: #0f172a !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .step-label,
+[data-theme="dark"] .summary-card-header h6,
+[data-theme="dark"] .route-mini-city,
+[data-theme="dark"] .pax-name,
+[data-theme="dark"] .method-name,
+[data-theme="dark"] h6,
+[data-theme="dark"] .fw-800,
+[data-theme="dark"] .fw-700,
+[data-theme="dark"] .fw-bold {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .summary-card-header,
+[data-theme="dark"] .payment-method-header {
+  background: #0f172a !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .step-label,
+[data-theme="dark"] .summary-card-header h6,
+[data-theme="dark"] .route-mini-city,
+[data-theme="dark"] .pax-name,
+[data-theme="dark"] .method-name {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .step-circle.pending {
+  background: #0f172a;
+  color: #475569;
+}
+[data-theme="dark"] .step-connector {
+  background: #334155 !important;
+}
+[data-theme="dark"] .method-option.selected {
+  background: rgba(37, 99, 235, 0.1) !important;
+  border-color: #2563eb !important;
+}
+[data-theme="dark"] .method-icon.card-icon {
+  background: #0f172a;
+  color: #60a5fa;
+}
+[data-theme="dark"] .coupon-card {
+  background: linear-gradient(135deg, #064e3b, #065f46) !important;
+  border-color: #065f46 !important;
+}
+[data-theme="dark"] .coupon-card label,
+[data-theme="dark"] .coupon-card small {
+  color: #d1fae5 !important;
+}
+[data-theme="dark"] .pax-avatar {
+  background: #0f172a;
+  color: #60a5fa;
+}
+[data-theme="dark"] .price-line,
+[data-theme="dark"] .pax-item {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .route-mini-line {
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .price-line.total {
+  border-top-color: #334155 !important;
+}
+
+/* Professional Stop Visualization */
+.stop-line-bar {
+  height: 3px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  width: 100%;
+  position: relative;
+  margin: 12px 0;
+}
+.stop-line-active {
+  position: absolute;
+  height: 100%;
+  background: #ef4444;
+  border-radius: 4px;
+  left: 0;
+  right: 0;
+}
+.stop-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border: 2.5px solid #ef4444;
+  border-radius: 50%;
+  top: -3.5px;
+  z-index: 2;
+  box-shadow: 0 0 0 4px #fff;
+}
+.stop-label {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #475569;
+  white-space: nowrap;
+}
+</style>
 {% endblock %}
 
-{% block scripts %}
-<script>
-// Simple form validation
-document.getElementById('payment-form').addEventListener('submit', function(e) {
-    const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
-    
-    if (paymentMethod === 'credit_card') {
-        const cardNumber = document.getElementById('card-number').value;
-        const cardName = document.getElementById('card-name').value;
-        const cardExpiry = document.getElementById('card-expiry').value;
-        const cardCvv = document.getElementById('card-cvv').value;
-        
-        if (!cardNumber || !cardName || !cardExpiry || !cardCvv) {
-            e.preventDefault();
-            alert('Please fill in all credit card details');
-        }
-    }
-});
+{% block body %}
+<div class="payment-hero">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-2">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}" style="color:rgba(255,255,255,0.55);text-decoration:none;">Home</a></li>
+        <li class="breadcrumb-item" style="color:rgba(255,255,255,0.9);">Payment</li>
+      </ol>
+    </nav>
+    <h1><i class="bi bi-credit-card me-2"></i>Complete Payment</h1>
+  </div>
+</div>
 
-// Toggle payment method forms
-document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
-    radio.addEventListener('change', function() {
-        if (this.value === 'credit_card') {
-            document.getElementById('credit-card-form').style.display = 'block';
-        } else {
-            document.getElementById('credit-card-form').style.display = 'none';
-        }
-    });
+<div class="container py-4">
+  <!-- Progress -->
+  <div class="booking-steps d-none d-md-flex">
+    <div class="step-item">
+      <div class="step-circle done"><i class="bi bi-check"></i></div>
+      <div class="step-label">Passengers</div>
+    </div>
+    <div class="step-connector" style="background:linear-gradient(90deg,#16a34a,#2563eb);"></div>
+    <div class="step-item">
+      <div class="step-circle active"><i class="bi bi-credit-card-fill"></i></div>
+      <div class="step-label">Payment</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item">
+      <div class="step-circle pending">3</div>
+      <div class="step-label pending">Confirmation</div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left: Payment Form -->
+    <div class="col-lg-7">
+      <form method="POST" id="payment-form">
+        {% csrf_token %}
+
+        <!-- Coupon -->
+        <div class="coupon-card">
+          <label><i class="bi bi-tag-fill me-2"></i>Have a Coupon Code?</label>
+          <div class="input-group">
+            <input type="text" name="coupon_code" class="form-control" placeholder="Enter coupon code"
+              id="coupon-input" value="{{ coupon_applied|default:'' }}" style="border-radius:10px 0 0 10px;">
+            <button class="btn btn-success px-4" type="submit" name="apply_coupon" value="1"
+              style="border-radius:0 10px 10px 0;">Apply</button>
+          </div>
+          <div class="mt-2 d-flex align-items-center gap-2">
+            <span class="badge" style="background:#dcfce7; color:#15803d; font-size:0.72rem;">
+              <i class="bi bi-gift-fill me-1"></i>TIP
+            </span>
+            <small style="color:#166534; font-weight:600;">Use <strong>UDAAAN</strong> for 100% off on your first booking!</small>
+          </div>
+        </div>
+
+        <!-- Payment Methods -->
+        <div class="payment-method-card">
+          <div class="payment-method-header">
+            <h6 class="fw-800 mb-0" style="font-weight:800;">Choose Payment Method</h6>
+          </div>
+          <div class="p-4">
+            <!-- Credit Card -->
+            <div class="method-option selected" id="method-card" onclick="selectMethod('credit_card', this)">
+              <label class="method-label">
+                <input type="radio" name="payment_method" id="credit-card" value="credit_card" checked>
+                <div class="method-icon card-icon"><i class="bi bi-credit-card-2-front-fill"></i></div>
+                <div>
+                  <div class="method-name">Credit / Debit Card</div>
+                  <div class="method-sub">Visa, Mastercard, Amex, RuPay</div>
+                </div>
+                <div class="payment-logos ms-auto">
+                  <div class="payment-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" alt="Visa"></div>
+                  <div class="payment-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="MC"></div>
+                </div>
+              </label>
+            </div>
+
+            <!-- Card form -->
+            <div id="credit-card-form" class="card-form mb-3">
+              <div class="row g-3">
+                <div class="col-12">
+                  <label class="form-label">Card Number</label>
+                  <input type="text" class="form-control" id="card-number" placeholder="1234 5678 9012 3456" maxlength="19">
+                  <div class="invalid-feedback">Please enter a valid 15–16 digit card number.</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Name on Card</label>
+                  <input type="text" class="form-control" id="card-name" placeholder="Full Name">
+                  <div class="invalid-feedback">Please enter the name on card.</div>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Expiry</label>
+                  <input type="text" class="form-control" id="card-expiry" placeholder="MM/YY" maxlength="5">
+                  <div class="invalid-feedback">Format: MM/YY.</div>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">CVV</label>
+                  <input type="text" class="form-control" id="card-cvv" placeholder="123" maxlength="4">
+                  <div class="invalid-feedback">Valid 3–4 digit CVV.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- PayPal -->
+            <div class="method-option" id="method-paypal" onclick="selectMethod('paypal', this)">
+              <label class="method-label">
+                <input type="radio" name="payment_method" id="paypal" value="paypal">
+                <div class="method-icon paypal-icon"><i class="bi bi-paypal"></i></div>
+                <div>
+                  <div class="method-name">PayPal</div>
+                  <div class="method-sub">Pay securely with your PayPal account</div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pay button -->
+        <button type="submit" name="complete_payment" value="1" class="btn-pay">
+          <i class="bi bi-lock-fill me-2"></i>
+          Pay ₹{{ final_price|default:booking.total_price|floatformat:2 }} Securely
+        </button>
+        <div class="text-center mt-3">
+          <small class="text-muted">
+            <i class="bi bi-shield-lock me-1"></i>256-bit SSL encrypted. Your payment data is never stored.
+          </small>
+        </div>
+      </form>
+    </div>
+
+    <!-- Right: Booking Summary -->
+    <div class="col-lg-5">
+      <div class="summary-card mb-3">
+        <div class="summary-card-header">
+          <h6><i class="bi bi-journal-bookmark-fill me-2" style="color:#2563eb;"></i>Booking Summary</h6>
+          <div style="font-family:monospace; font-size:0.78rem; color:#64748b; font-weight:600; margin-top:4px;"># {{ booking.reference }}</div>
+        </div>
+        <div class="summary-card-body">
+          <!-- Route -->
+          <div class="route-mini mb-3">
+            <div class="text-center">
+              <div class="route-mini-city">{% if booking.booking_segments.exists %}{{ booking.booking_segments.first.flight.departure_airport.city }}{% else %}{{ booking.flight.departure_airport.city }}{% endif %}</div>
+              <div class="route-mini-code">{% if booking.booking_segments.exists %}{{ booking.booking_segments.first.flight.departure_airport.code }}{% else %}{{ booking.flight.departure_airport.code }}{% endif %}</div>
+            </div>
+            <div style="flex:1; padding:0 1.5rem; position:relative;">
+              <div class="stop-line-bar">
+                <div class="stop-line-active"></div>
+                {% if booking.booking_segments.count > 1 %}
+                  {% with total_segs=booking.booking_segments.count %}
+                  {% for seg in booking.booking_segments.all %}
+                    {% if not forloop.last %}
+                      <div class="stop-dot" style="left: {{ forloop.counter|mul:100|div:total_segs }}%;">
+                        <span class="stop-label">{{ seg.flight.arrival_airport.code }}</span>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                  {% endwith %}
+                {% endif %}
+              </div>
+            </div>
+            <div class="text-center">
+              <div class="route-mini-city">{% if booking.booking_segments.exists %}{{ booking.booking_segments.last.flight.arrival_airport.city }}{% else %}{{ booking.flight.arrival_airport.city }}{% endif %}</div>
+              <div class="route-mini-code">{% if booking.booking_segments.exists %}{{ booking.booking_segments.last.flight.arrival_airport.code }}{% else %}{{ booking.flight.arrival_airport.code }}{% endif %}</div>
+            </div>
+          </div>
+          <div class="d-flex gap-2 flex-wrap mb-3">
+            <span style="background:#f0fdf4; color:#16a34a; font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:99px;">{{ booking.travel_class }}</span>
+            <span style="background:#f8fafc; color:#64748b; font-size:0.72rem; font-weight:600; padding:3px 10px; border-radius:99px;">{{ booking.flight.departure_time|date:"M d, Y" }}</span>
+          </div>
+
+          <!-- Segments -->
+          <div style="font-size:0.72rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Itinerary</div>
+            <style>
+              [data-theme="dark"] .summary-card .route-mini,
+              [data-theme="dark"] .summary-card .route-mini-city,
+              [data-theme="dark"] .summary-card .route-mini-code,
+              [data-theme="dark"] .summary-card .fw-bold,
+              [data-theme="dark"] .summary-card .text-muted {
+                color: #f8fafc !important;
+              }
+              [data-theme="dark"] .summary-card .d-flex.justify-content-between.align-items-center {
+                background: #1e293b !important;
+                border-color: #334155 !important;
+              }
+            </style>
+          {% for seg in booking.booking_segments.all %}
+          <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded" style="background:#f8fafc; border:1px solid #e2e8f0;">
+            <div class="small">
+                <div class="fw-bold">{{ seg.flight.departure_airport.code }} ✈ {{ seg.flight.arrival_airport.code }}</div>
+                <div class="text-muted" style="font-size:0.65rem;">{{ seg.flight.airline.name }} · {{ seg.flight.airline.code }}{{ seg.flight.flight_number }}</div>
+            </div>
+            <div class="text-end">
+                <div class="fw-bold" style="font-size:0.75rem;">{{ seg.flight.departure_time|time:"H:i" }}</div>
+                {% if seg.layover_duration %}
+                <div class="text-warning" style="font-size:0.6rem; font-weight:700;">+{{ seg.layover_duration }} layover</div>
+                {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+
+          <!-- Passengers -->
+          <div style="font-size:0.72rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Passengers</div>
+          {% for passenger in passengers %}
+          <div class="pax-item">
+            <div class="pax-avatar"><i class="bi bi-person-fill"></i></div>
+            <div>
+              <div class="pax-name">{{ passenger.first_name }} {{ passenger.last_name }}</div>
+              <div class="pax-details">{{ passenger.get_id_type_display }}: {{ passenger.id_number }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Price breakdown -->
+      <div class="summary-card">
+        <div class="summary-card-header">
+          <h6><i class="bi bi-receipt me-2" style="color:#2563eb;"></i>Price Breakdown</h6>
+        </div>
+        <div class="summary-card-body">
+          {% if booking.fare_type == 'STUDENT' %}
+          <div class="price-line">
+            <span class="text-muted">Original Total</span>
+            <span class="fw-semibold">₹{{ booking.total_price|add:booking.discount_amount|floatformat:2 }}</span>
+          </div>
+          <div class="price-line discount" style="color: #16a34a; font-weight: 700;">
+            <span><i class="bi bi-percent"></i> Student Discount (10%)</span>
+            <span>−₹{{ booking.discount_amount|floatformat:2 }}</span>
+          </div>
+          <div class="price-line">
+            <span class="text-muted">Final Total</span>
+            <span class="fw-semibold">₹{{ booking.total_price|floatformat:2 }}</span>
+          </div>
+          {% else %}
+          <div class="price-line">
+            <span class="text-muted">Base Fare ({{ booking.nums_passengers }} × ₹{{ booking.per_passenger_price|floatformat:2 }})</span>
+            <span class="fw-semibold">₹{{ booking.total_price|floatformat:2 }}</span>
+          </div>
+          {% endif %}
+          {% for passenger in passengers %}
+          <div class="price-line">
+            <span class="text-muted">Passenger {{ forloop.counter }} ({{ passenger.first_name }}{% if passenger.is_child %} - Child{% endif %})</span>
+            <span>₹{% if passenger.is_child and passenger.age <= 5 %}0.00{% else %}{{ booking.per_passenger_price|floatformat:2 }}{% endif %}</span>
+          </div>
+          {% endfor %}
+          {% if discount %}
+          <div class="price-line discount">
+            <span><i class="bi bi-gift-fill me-1"></i>First Booking Discount</span>
+            <span>−₹{{ discount|floatformat:2 }}</span>
+          </div>
+          {% endif %}
+          <div class="price-line total">
+            <span class="fw-800" style="font-weight:800;font-size:1rem;">Total Amount</span>
+            <span class="fw-900" style="font-weight:900;font-size:1.4rem;color:#2563eb;" id="final-amount">₹{% if coupon_applied %}{{ final_price|floatformat:2 }}{% else %}{{ booking.total_price|floatformat:2 }}{% endif %}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function selectMethod(method, el) {
+  document.querySelectorAll('.method-option').forEach(m => m.classList.remove('selected'));
+  el.classList.add('selected');
+  document.querySelector(`input[value="${method}"]`).checked = true;
+  document.getElementById('credit-card-form').style.display = method === 'credit_card' ? 'block' : 'none';
+}
+
+// Card number formatting
+const cardInput = document.getElementById('card-number');
+if (cardInput) {
+  cardInput.addEventListener('input', function() {
+    let val = this.value.replace(/\D/g, '').substring(0, 16);
+    this.value = val.replace(/(.{4})/g, '$1 ').trim();
+  });
+}
+
+// Expiry formatting
+const expiryInput = document.getElementById('card-expiry');
+if (expiryInput) {
+  expiryInput.addEventListener('input', function() {
+    let val = this.value.replace(/\D/g, '').substring(0, 4);
+    if (val.length > 2) val = val.substring(0,2) + '/' + val.substring(2);
+    this.value = val;
+  });
+}
+
+document.getElementById('payment-form').addEventListener('submit', function(e) {
+  const method = document.querySelector('input[name="payment_method"]:checked').value;
+  document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+  if (method === 'credit_card') {
+    const n = document.getElementById('card-number');
+    const nm = document.getElementById('card-name');
+    const ex = document.getElementById('card-expiry');
+    const cv = document.getElementById('card-cvv');
+    let err = false;
+    const raw = n.value.replace(/\s/g, '');
+    if (!raw || raw.length < 15 || raw.length > 16 || isNaN(raw)) { n.classList.add('is-invalid'); err = true; }
+    if (!nm.value.trim()) { nm.classList.add('is-invalid'); err = true; }
+    if (!ex.value.match(/^(0[1-9]|1[0-2])\/\d{2}$/)) { ex.classList.add('is-invalid'); err = true; }
+    if (!cv.value || cv.value.length < 3) { cv.classList.add('is-invalid'); err = true; }
+    if (err) e.preventDefault();
+  }
 });
 </script>
 {% endblock %}

@@ -13,6 +13,22 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Python 3.14 compatibility monkey-patch for Django Template Context
+import django.template.context
+import copy
+from django.template.context import BaseContext
+
+def fixed_copy(self):
+    cls = self.__class__
+    duplicate = cls.__new__(cls)
+    for key, value in self.__dict__.items():
+        setattr(duplicate, key, value)
+    if hasattr(self, 'dicts'):
+        duplicate.dicts = self.dicts[:]
+    return duplicate
+
+BaseContext.__copy__ = fixed_copy
+
 # ──────────────────────────────────────────────
 # SECURITY
 # ──────────────────────────────────────────────

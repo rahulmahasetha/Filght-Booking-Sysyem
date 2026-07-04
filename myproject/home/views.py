@@ -4,9 +4,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import Contact, Airport, Airline, Flight, Booking, Passenger, Payment
+from .models import Contact, Airport, Airline, Flight, Booking, Passenger, Payment, BookingSegment, Ticket
+import random
 from django.contrib.auth.models import User
 from datetime import datetime, date
+from decimal import Decimal
 import random
 
 # Home and static pages views
@@ -45,6 +47,82 @@ def contact(request):
     
     return render(request, 'contact.html')
 
+from datetime import timedelta
+from django.db.models import Q
+
+def find_routes(source_id, destination_id, travel_date, travel_class, passengers, max_stops=1):
+    """
+    Recursive helper to find routes (direct and connecting).
+    Returns list of paths: [{'segments': [f1, f2], 'total_price': X, 'total_duration': Y, 'layovers': [L1]}]
+    """
+    paths = []
+    
+    # 1. Direct Flights
+    direct_flights = Flight.objects.filter(
+        departure_airport_id=source_id,
+        arrival_airport_id=destination_id,
+        departure_time__date=travel_date
+    )
+    # Seat filter
+    if travel_class == 'ECONOMY': direct_flights = direct_flights.filter(economy_seats__gte=passengers)
+    elif travel_class == 'BUSINESS': direct_flights = direct_flights.filter(business_seats__gte=passengers)
+    else: direct_flights = direct_flights.filter(first_class_seats__gte=passengers)
+
+    for f in direct_flights:
+        paths.append({
+            'segments': [f],
+            'total_price': f.get_price_for_class(travel_class),
+            'total_duration': f.duration,
+            'is_direct': True,
+            'total_stops': f.stops,
+            'layovers': []
+        })
+
+    # 2. 1-Stop Connecting Flights (Source -> X -> Dest)
+    if max_stops >= 1:
+        # Flights from Source on travel_date
+        first_legs = Flight.objects.filter(
+            departure_airport_id=source_id,
+            departure_time__date=travel_date
+        ).exclude(arrival_airport_id=destination_id)
+        
+        if travel_class == 'ECONOMY': first_legs = first_legs.filter(economy_seats__gte=passengers)
+        elif travel_class == 'BUSINESS': first_legs = first_legs.filter(business_seats__gte=passengers)
+        else: first_legs = first_legs.filter(first_class_seats__gte=passengers)
+
+        for f1 in first_legs:
+            # Find second legs from f1.arrival_airport to destination
+            # Second leg must be after f1.arrival_time + 1 hour layover
+            min_dep_time = f1.arrival_time + timedelta(hours=1)
+            max_dep_time = f1.arrival_time + timedelta(hours=24) # Max 24h layover
+            
+            second_legs = Flight.objects.filter(
+                departure_airport_id=f1.arrival_airport_id,
+                arrival_airport_id=destination_id,
+                departure_time__gte=min_dep_time,
+                departure_time__lte=max_dep_time
+            )
+            
+            if travel_class == 'ECONOMY': second_legs = second_legs.filter(economy_seats__gte=passengers)
+            elif travel_class == 'BUSINESS': second_legs = second_legs.filter(business_seats__gte=passengers)
+            else: second_legs = second_legs.filter(first_class_seats__gte=passengers)
+
+            for f2 in second_legs:
+                layover = f2.departure_time - f1.arrival_time
+                total_dur = f2.arrival_time - f1.departure_time
+                total_price = f1.get_price_for_class(travel_class) + f2.get_price_for_class(travel_class)
+                
+                paths.append({
+                    'segments': [f1, f2],
+                    'total_price': total_price,
+                    'total_duration': total_dur,
+                    'is_direct': False,
+                    'total_stops': f1.stops + f2.stops + 1,
+                    'layovers': [layover]
+                })
+
+    return paths
+
 # Flight booking views
 def flight_search(request):
     if request.method == 'POST':
@@ -53,29 +131,47 @@ def flight_search(request):
         date_str = request.POST.get('date')
         passengers = int(request.POST.get('passengers', 1))
         travel_class = request.POST.get('class', 'ECONOMY')
+        fare_type = request.POST.get('fare_type', 'NORMAL').upper()
+        if fare_type not in ['NORMAL', 'STUDENT']:
+            fare_type = 'NORMAL'
+        
+        # Filters
+        max_layover = request.POST.get('max_layover') # in hours
+        preferred_airline = request.POST.get('airline')
         
         try:
-            # Convert string date to datetime object
             date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
-            flights = Flight.objects.filter(
-                departure_airport_id=departure,
-                arrival_airport_id=arrival,
-                departure_time__date=date_obj
-            )
+            all_paths = find_routes(departure, arrival, date_obj, travel_class, passengers)
+
+            if fare_type == 'STUDENT':
+                for path in all_paths:
+                    base_price = path['total_price']
+                    path['original_price'] = base_price
+                    path['discount_amount'] = round(base_price * Decimal('0.10'), 2)
+                    path['total_price'] = base_price - path['discount_amount']
+            else:
+                for path in all_paths:
+                    path['original_price'] = path['total_price']
+                    path['discount_amount'] = Decimal('0.00')
             
-            # Filter by available seats
-            if travel_class == 'ECONOMY':
-                flights = flights.filter(economy_seats__gte=passengers)
-            elif travel_class == 'BUSINESS':
-                flights = flights.filter(business_seats__gte=passengers)
-            elif travel_class == 'FIRST':
-                flights = flights.filter(first_class_seats__gte=passengers)
+            # Apply additional filters
+            if max_layover:
+                max_l_td = timedelta(hours=int(max_layover))
+                all_paths = [p for p in all_paths if not p['layovers'] or all(l <= max_l_td for l in p['layovers'])]
             
+            if preferred_airline:
+                all_paths = [p for p in all_paths if all(s.airline_id == int(preferred_airline) for s in p['segments'])]
+
+            # Sort by price then duration
+            all_paths.sort(key=lambda x: (x['total_price'], x['total_duration']))
+
             return render(request, 'search_results.html', {
-                'flights': flights.order_by('departure_time'),
+                'paths': all_paths,
                 'passengers': passengers,
                 'travel_class': travel_class,
-                'search_data': request.POST
+                'fare_type': fare_type,
+                'search_data': request.POST,
+                'airlines': Airline.objects.all()
             })
             
         except ValueError:
@@ -87,110 +183,154 @@ def flight_search(request):
 
 @login_required
 def book_flight(request, flight_id):
-    flight = get_object_or_404(Flight, pk=flight_id)
+    # Support multi-segment paths
+    path_str = request.GET.get('path', request.POST.get('path', str(flight_id)))
+    path_ids = path_str.split(',')
+    flights = [get_object_or_404(Flight, pk=int(fid)) for fid in path_ids]
     
     if request.method == 'POST':
-        passengers = int(request.POST.get('total_passengers', 1))
-        travel_class = request.POST.get('travel_class')
+        total_pax = int(request.POST.get('total_passengers', 1))
+        travel_class = request.POST.get('travel_class', 'ECONOMY')
+        fare_type = request.POST.get('fare_type', 'NORMAL').upper()
+        if fare_type not in ['NORMAL', 'STUDENT']:
+            fare_type = 'NORMAL'
         
-        # Validate passenger data first
+        # Combined base price for all segments
+        combined_base_price = sum(f.get_price_for_class(travel_class) for f in flights)
+            
+        calculated_total_price = Decimal('0.00')
         passenger_details = []
-        for i in range(1, passengers + 1):
-            first_name = request.POST.get(f'passenger_{i}_first_name', '').strip()
-            last_name = request.POST.get(f'passenger_{i}_last_name', '').strip()
-            dob_str = request.POST.get(f'passenger_{i}_dob', '')
-            id_type = request.POST.get(f'passenger_{i}_id_type', '')
-            id_number = request.POST.get(f'passenger_{i}_id_number', '').strip()
-            passport_number = request.POST.get(f'passenger_{i}_passport_number', '').strip()
+        
+        for i in range(1, total_pax + 1):
+            pax_type = request.POST.get(f'passenger_{i}_type')
+            first_name = request.POST.get(f'passenger_{i}_first_name')
+            last_name = request.POST.get(f'passenger_{i}_last_name')
+            gender = request.POST.get(f'passenger_{i}_gender')
+            age_val = request.POST.get(f'passenger_{i}_age', '0')
+            age = int(age_val) if age_val.isdigit() else 0
+            dob = request.POST.get(f'passenger_{i}_dob')
+            id_type = request.POST.get(f'passenger_{i}_id_type')
+            id_number = request.POST.get(f'passenger_{i}_id_number')
+            is_pregnant = request.POST.get(f'passenger_{i}_is_pregnant') == 'on'
+            special_assistance = request.POST.get(f'passenger_{i}_special_assistance') == 'on'
+            assistance_details = request.POST.get(f'passenger_{i}_special_assistance_details', '')
             
-            if not all([first_name, last_name, dob_str, id_type, id_number]):
-                messages.error(request, "Please provide complete details for all passengers")
-                return redirect(request.path)
+            # Pricing logic: Child <= 5 is free
+            pax_price = combined_base_price
+            if pax_type == 'CHILD' and age <= 5:
+                pax_price = Decimal('0.00')
             
-            try:
-                dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
-            except ValueError:
-                messages.error(request, "Invalid date format for passenger date of birth")
-                return redirect(request.path)
-                
+            calculated_total_price += pax_price
+            
             passenger_details.append({
                 'first_name': first_name,
                 'last_name': last_name,
+                'gender': gender,
+                'age': age,
+                'is_child': (pax_type == 'CHILD'),
                 'date_of_birth': dob,
                 'id_type': id_type,
                 'id_number': id_number,
-                'passport_number': passport_number
+                'is_pregnant': is_pregnant,
+                'special_assistance': special_assistance,
+                'special_assistance_details': assistance_details
             })
-        
-        
-        # Calculate price
-        if travel_class == 'ECONOMY':
-            price = flight.economy_price
-            available_seats = flight.economy_seats
-        elif travel_class == 'BUSINESS':
-            price = flight.business_price
-            available_seats = flight.business_seats
-        elif travel_class == 'FIRST':
-            price = flight.first_class_price
-            available_seats = flight.first_class_seats
-        
-        # Check seat availability
-        if available_seats < passengers:
-            messages.error(request, "Not enough seats available")
-            return redirect('flight_search')
-        
-        total_price = price * passengers
-        
-        # Create booking
-        booking = Booking(
+            
+        discount_amount = Decimal('0.00')
+        if fare_type == 'STUDENT' and calculated_total_price > 0:
+            discount_amount = round(calculated_total_price * Decimal('0.10'), 2)
+            calculated_total_price -= discount_amount
+
+        booking = Booking.objects.create(
             user=request.user,
-            flight=flight,
-            nums_passengers=passengers,
+            flight=flights[0], # Reference to first leg
+            nums_passengers=total_pax,
             travel_class=travel_class,
-            total_price=total_price
+            fare_type=fare_type,
+            discount_amount=discount_amount,
+            total_price=calculated_total_price
         )
-        booking.save()
         
-        # Create passengers
-        for detail in passenger_details:
-            Passenger.objects.create(
+        # Create Booking Segments
+        booking_segments = []
+        for idx, f in enumerate(flights):
+            layover = None
+            if idx > 0:
+                layover = f.departure_time - flights[idx-1].arrival_time
+            seg = BookingSegment.objects.create(
                 booking=booking,
-                first_name=detail['first_name'],
-                last_name=detail['last_name'],
-                date_of_birth=detail['date_of_birth'],
-                id_type=detail['id_type'],
-                id_number=detail['id_number'],
-                passport_number=detail['passport_number']
+                flight=f,
+                sequence=idx+1,
+                layover_duration=layover
             )
-        # Update available seats
-        if travel_class == 'ECONOMY':
-            flight.economy_seats -= passengers
-        elif travel_class == 'BUSINESS':
-            flight.business_seats -= passengers
-        elif travel_class == 'FIRST':
-            flight.first_class_seats -= passengers
-        flight.save()
+            booking_segments.append(seg)
+
+        for detail in passenger_details:
+            pax = Passenger.objects.create(
+                booking=booking,
+                **detail
+            )
+            
+            # Ticket Generation Logic
+            # Group segments by airline name and number
+            ticket_groups = []
+            if booking_segments:
+                current_group = [booking_segments[0]]
+                for s_idx in range(1, len(booking_segments)):
+                    prev = booking_segments[s_idx-1].flight
+                    curr = booking_segments[s_idx].flight
+                    if prev.airline.name == curr.airline.name and prev.flight_number == curr.flight_number:
+                        current_group.append(booking_segments[s_idx])
+                    else:
+                        ticket_groups.append(current_group)
+                        current_group = [booking_segments[s_idx]]
+                ticket_groups.append(current_group)
+            
+            for group in ticket_groups:
+                # Generate unique ticket number
+                tkt_num = f"{group[0].flight.airline.code}{random.randint(1000000, 9999999)}"
+                tkt = Ticket.objects.create(
+                    passenger=pax,
+                    ticket_number=tkt_num,
+                    airline_name=group[0].flight.airline.name,
+                    flight_number=group[0].flight.flight_number
+                )
+                tkt.segments.set(group)
+            
+        # Update available seats for ALL segments
+        for f in flights:
+            if travel_class == 'ECONOMY': f.economy_seats -= total_pax
+            elif travel_class == 'BUSINESS': f.business_seats -= total_pax
+            elif travel_class == 'FIRST': f.first_class_seats -= total_pax
+            f.save()
         
         return redirect('payment', booking_id=booking.id)
     
-    # GET request handling
+    # GET request
     passengers = int(request.GET.get('passengers', 1))
     travel_class = request.GET.get('class', 'ECONOMY')
+    fare_type = request.GET.get('fare_type', 'NORMAL').upper()
+    if fare_type not in ['NORMAL', 'STUDENT']:
+        fare_type = 'NORMAL'
     
-    if travel_class == 'ECONOMY':
-        price = flight.economy_price
-    elif travel_class == 'BUSINESS':
-        price = flight.business_price
-    elif travel_class == 'FIRST':
-        price = flight.first_class_price
-    
-    total_price = price * passengers
+    combined_price = sum(f.get_price_for_class(travel_class) for f in flights)
+    original_total_price = combined_price * passengers
+    discount_amount = Decimal('0.00')
+    total_price = original_total_price
+    if fare_type == 'STUDENT' and original_total_price > 0:
+        discount_amount = round(original_total_price * Decimal('0.10'), 2)
+        total_price = original_total_price - discount_amount
     
     return render(request, 'book.html', {
-        'flight': flight,
+        'flight': flights[0],
+        'flights': flights, # Pass all segments
+        'path': path_str,
         'passengers': range(1, passengers + 1),
         'travel_class': travel_class,
-        'price': price,
+        'fare_type': fare_type,
+        'price': combined_price,
+        'original_total_price': original_total_price,
+        'discount_amount': discount_amount,
         'total_price': total_price,
     })
 
@@ -253,10 +393,14 @@ def payment(request, booking_id):
                 if not previous_payments:
                     payment_amount = 0
 
+            payment_method_input = request.POST.get('payment_method', 'credit_card')
+            payment_method_display = 'PayPal' if payment_method_input == 'paypal' else 'Credit Card'
+
             payment = Payment.objects.create(
                 booking=booking,
                 amount=payment_amount,
                 transaction_id=f"TX{random.randint(100000000, 999999999)}",
+                payment_method=payment_method_display,
                 status='COMPLETED'
             )
             
@@ -552,26 +696,72 @@ def admin_dashboard_api(request):
 def flight_availability_api(request):
     departure_id = request.GET.get('departure')
     arrival_id = request.GET.get('arrival')
+    travel_class = request.GET.get('class', 'ECONOMY').upper()
+    fare_type = request.GET.get('fare_type', 'NORMAL').upper()
+    if fare_type not in ['NORMAL', 'STUDENT']:
+        fare_type = 'NORMAL'
+    passengers = int(request.GET.get('passengers', 1))
+    
     if not departure_id or not arrival_id:
         return JsonResponse({'error': 'Missing parameters'}, status=400)
+        
     from django.utils import timezone
-    flights = Flight.objects.filter(departure_airport_id=departure_id, arrival_airport_id=arrival_id, departure_time__gte=timezone.now())
+    from django.db.models import Min
+    
+    # Filter flights from today onwards
+    flights = Flight.objects.filter(
+        departure_airport_id=departure_id, 
+        arrival_airport_id=arrival_id, 
+        departure_time__gte=timezone.now()
+    ).select_related('airline', 'departure_airport', 'arrival_airport').order_by('departure_time')
+    
     availability = {}
+    
     for flight in flights:
+        # Check seats for requested class
+        if travel_class == 'ECONOMY':
+            seats = flight.economy_seats
+            price = float(flight.economy_price)
+        elif travel_class == 'BUSINESS':
+            seats = flight.business_seats
+            price = float(flight.business_price)
+        else: # FIRST
+            seats = flight.first_class_seats
+            price = float(flight.first_class_price)
+
+        original_price = price
+        discount_amount = 0
+        if fare_type == 'STUDENT':
+            discount_amount = round(price * 0.10, 2)
+            price = round(price - discount_amount, 2)
+            
+        if seats < passengers:
+            continue
+            
         date_str = flight.departure_time.strftime('%Y-%m-%d')
-        total_seats = flight.economy_seats + flight.business_seats + flight.first_class_seats
-        if total_seats >= 20:
-            status = 'green'
-        elif total_seats > 0:
-            status = 'yellow'
-        else:
-            status = 'red'
+        
         if date_str not in availability:
-            availability[date_str] = status
-        else:
-            current = availability[date_str]
-            if status == 'green' or (status == 'yellow' and current == 'red'):
-                availability[date_str] = status
+            availability[date_str] = {
+                'min_price': price,
+                'flights': []
+            }
+        
+        availability[date_str]['min_price'] = min(availability[date_str]['min_price'], price)
+        availability[date_str]['flights'].append({
+            'id': flight.id,
+            'airline': flight.airline.name,
+            'airline_code': flight.airline.code,
+            'airline_logo': flight.airline.logo.url if flight.airline.logo else '',
+            'flight_number': flight.flight_number,
+            'departure_time': flight.departure_time.strftime('%H:%M'),
+            'arrival_time': flight.arrival_time.strftime('%H:%M'),
+            'duration': flight.duration_display(),
+            'original_price': original_price,
+            'discount_amount': discount_amount,
+            'price': price,
+            'seats': seats
+        })
+        
     return JsonResponse(availability)
 
 def reset_password_direct(request):
