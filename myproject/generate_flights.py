@@ -1,6 +1,6 @@
 import os
 import django
-from datetime import timedelta
+from datetime import datetime, timedelta
 from django.utils import timezone
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myproject.settings')
@@ -33,9 +33,10 @@ def extend_flights():
         for day_offset in range(total_days):
             target_date = today + timedelta(days=day_offset)
             
-            target_dep = timezone.datetime.combine(target_date, prototype_dep_time)
-            # make it timezone aware based on default timezone
-            target_dep = timezone.make_aware(target_dep, timezone.get_default_timezone())
+            target_dep = timezone.make_aware(
+                datetime.combine(target_date, prototype_dep_time),
+                timezone.get_default_timezone(),
+            )
             target_arr = target_dep + duration
             
             exists = Flight.objects.filter(

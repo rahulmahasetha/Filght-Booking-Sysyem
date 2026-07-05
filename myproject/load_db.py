@@ -4,10 +4,13 @@ import re
 from datetime import datetime, timedelta
 import ast
 
+from django.utils import timezone
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myproject.settings')
 django.setup()
 
 from home.models import Airport, Airline, Flight
+from home.timezone_utils import ensure_aware_datetime
 
 def parse_values(sql_file_path):
     with open(sql_file_path, 'r', encoding='utf-8') as f:
@@ -68,15 +71,15 @@ def load_data():
         
     print("Loading Flights...")
     flights = parse_values('../data/flight_home_flight.sql')
-    today = datetime.now().date()
+    today = timezone.now().date()
     
     for f in flights:
         try:
             dep_time_str = f[2].split('.')[0] # Remove fractional seconds
             arr_time_str = f[3].split('.')[0]
             
-            dep_time = datetime.strptime(dep_time_str, '%Y-%m-%d %H:%M:%S')
-            arr_time = datetime.strptime(arr_time_str, '%Y-%m-%d %H:%M:%S')
+            dep_time = ensure_aware_datetime(datetime.strptime(dep_time_str, '%Y-%m-%d %H:%M:%S'))
+            arr_time = ensure_aware_datetime(datetime.strptime(arr_time_str, '%Y-%m-%d %H:%M:%S'))
             
             # Shift dates to be in the future (relative to today)
             # Find how many days passed since 2025-04-10 (the earliest date in the dump)
@@ -89,7 +92,7 @@ def load_data():
                 
             new_dep_date = today + timedelta(days=day_offset + 1)
             
-            new_dep_time = datetime.combine(new_dep_date, dep_time.time())
+            new_dep_time = ensure_aware_datetime(datetime.combine(new_dep_date, dep_time.time()))
             
             # Calculate duration
             duration = arr_time - dep_time

@@ -1,12 +1,12 @@
 import os
 import django
-from datetime import datetime
 
 # Setup Django environment
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myproject.settings')
 django.setup()
 
 from home.models import Flight, FlightRoute, RouteStop, Airline, Airport
+from home.timezone_utils import ensure_aware_datetime
 
 def sync_routes_to_flights():
     routes = FlightRoute.objects.filter(is_active=True)
@@ -26,12 +26,14 @@ def sync_routes_to_flights():
             # Update or create the Flight leg
             # Find a flight that matches this route's sequence if possible, 
             # or just look for a flight between these airports at this time
+            departure_time = ensure_aware_datetime(s1.departure_time)
+            arrival_time = ensure_aware_datetime(s2.arrival_time)
             flight, created = Flight.objects.get_or_create(
                 departure_airport=s1.airport,
                 arrival_airport=s2.airport,
-                departure_time=s1.departure_time,
+                departure_time=departure_time,
                 defaults={
-                    'arrival_time': s2.arrival_time,
+                    'arrival_time': arrival_time,
                     'airline': airline,
                     'flight_number': flight_num,
                     'economy_seats': 150,
@@ -46,7 +48,7 @@ def sync_routes_to_flights():
             if not created:
                 flight.airline = airline
                 flight.flight_number = flight_num
-                flight.arrival_time = s2.arrival_time
+                flight.arrival_time = arrival_time
                 flight.save()
             
             print(f"Synced Leg: {s1.airport.code} -> {s2.airport.code} ({airline.name} {flight_num})")

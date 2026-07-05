@@ -2,12 +2,14 @@ import os
 import django
 from datetime import datetime, timedelta
 from decimal import Decimal
+from django.utils import timezone
 
 # Setup Django environment
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myproject.settings')
 django.setup()
 
 from home.models import Airport, Airline, Flight, FlightRoute, RouteStop
+from home.timezone_utils import ensure_aware_datetime
 
 def setup_patna_stop():
     # 1. Ensure Patna Airport exists
@@ -34,8 +36,8 @@ def setup_patna_stop():
     ktm = Airport.objects.get(code='KTM')
     
     # Timings from user request
-    departure_vga = datetime(2026, 5, 15, 18, 13, 50)
-    arrival_ktm = datetime(2026, 5, 18, 23, 0, 4)
+    departure_vga = ensure_aware_datetime(datetime(2026, 5, 15, 18, 13, 50))
+    arrival_ktm = ensure_aware_datetime(datetime(2026, 5, 18, 23, 0, 4))
     
     # Intermediate timings for PAT
     arrival_pat = departure_vga + timedelta(hours=2)

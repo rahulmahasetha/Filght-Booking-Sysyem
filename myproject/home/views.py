@@ -10,6 +10,9 @@ from django.contrib.auth.models import User
 from datetime import datetime, date
 from decimal import Decimal
 import random
+from django.utils import timezone
+
+from .timezone_utils import ensure_aware_datetime
 
 # Home and static pages views
 def index(request):
@@ -39,7 +42,7 @@ def contact(request):
             phone=phone, 
             pincode=pincode, 
             message=message,
-            date=datetime.now()
+            date=timezone.now()
         )
         contact.save()
         messages.success(request, "Your message has been sent successfully!")
@@ -544,7 +547,7 @@ def profile_view(request):
     
     # Dashboard Stats
     total_flights = bookings.count()
-    upcoming_trips = bookings.filter(status='CONFIRMED', flight__departure_time__gt=datetime.now()).count()
+    upcoming_trips = bookings.filter(status='CONFIRMED', flight__departure_time__gt=timezone.now()).count()
     cancelled_trips = bookings.filter(status='CANCELLED').count()
     total_spent = sum([b.total_price for b in bookings if b.status == 'CONFIRMED'])
     
@@ -612,7 +615,6 @@ def update_profile(request):
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Sum, Count, F
-from django.utils import timezone
 
 @staff_member_required
 def admin_dashboard_api(request):
