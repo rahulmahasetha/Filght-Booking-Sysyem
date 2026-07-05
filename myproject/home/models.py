@@ -249,25 +249,40 @@ def sync_flight_from_route_stop(sender, instance, **kwargs):
     if len(stops) < 2:
         return
         
+    from .timezone_utils import ensure_aware_datetime
     for i in range(len(stops) - 1):
         s1 = stops[i]
         s2 = stops[i+1]
         
         if s1.departure_airline and s1.flight_number:
-            Flight.objects.update_or_create(
+            dep_time = ensure_aware_datetime(s1.departure_time)
+            arr_time = ensure_aware_datetime(s2.arrival_time)
+            
+            flights = Flight.objects.filter(
                 departure_airport=s1.airport,
                 arrival_airport=s2.airport,
-                departure_time=s1.departure_time,
-                defaults={
-                    'arrival_time': s2.arrival_time,
-                    'airline': s1.departure_airline,
-                    'flight_number': s1.flight_number,
-                    'economy_seats': 150,
-                    'business_seats': 20,
-                    'first_class_seats': 10,
-                    'economy_price': 5000,
-                    'business_price': 10000,
-                    'first_class_price': 15000,
-                    'stops': 0
-                }
+                departure_time=dep_time
             )
+            
+            if flights.exists():
+                for flight in flights:
+                    flight.arrival_time = arr_time
+                    flight.airline = s1.departure_airline
+                    flight.flight_number = s1.flight_number
+                    flight.save()
+            else:
+                Flight.objects.create(
+                    departure_airport=s1.airport,
+                    arrival_airport=s2.airport,
+                    departure_time=dep_time,
+                    arrival_time=arr_time,
+                    airline=s1.departure_airline,
+                    flight_number=s1.flight_number,
+                    economy_seats=150,
+                    business_seats=20,
+                    first_class_seats=10,
+                    economy_price=5000,
+                    business_price=10000,
+                    first_class_price=15000,
+                    stops=0
+                )

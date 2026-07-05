@@ -85,12 +85,11 @@ def setup_patna_stop():
 
     # 4. Optional: Create a FlightRoute for Admin management
     route, _ = FlightRoute.objects.get_or_create(
-        airline=na,
-        flight_number='1154'
+        name='NA1154'
     )
     route.stops.all().delete()
-    RouteStop.objects.create(route=route, airport=vga, sequence=1, departure_time=departure_vga)
-    RouteStop.objects.create(route=route, airport=patna, sequence=2, arrival_time=arrival_pat, departure_time=departure_pat)
+    RouteStop.objects.create(route=route, airport=vga, sequence=1, departure_time=departure_vga, departure_airline=na, flight_number='1154')
+    RouteStop.objects.create(route=route, airport=patna, sequence=2, arrival_time=arrival_pat, departure_time=departure_pat, departure_airline=na, flight_number='1154')
     RouteStop.objects.create(route=route, airport=ktm, sequence=3, arrival_time=arrival_ktm)
     
     print(f"FlightRoute configured for NA1154")

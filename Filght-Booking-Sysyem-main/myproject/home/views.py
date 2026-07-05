@@ -5,7 +5,8 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import Contact, Airport, Airline, Flight, Booking, Passenger, Payment
-from datetime import datetime, date
+from datetime import date
+from django.utils import timezone
 import random
 
 # Home and static pages views
@@ -36,7 +37,7 @@ def contact(request):
             phone=phone, 
             pincode=pincode, 
             message=message,
-            date=datetime.now()
+            date=timezone.now()
         )
         contact.save()
         messages.success(request, "Your message has been sent successfully!")

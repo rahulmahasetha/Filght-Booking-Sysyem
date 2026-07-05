@@ -28,22 +28,30 @@ def sync_routes_to_flights():
             # or just look for a flight between these airports at this time
             departure_time = ensure_aware_datetime(s1.departure_time)
             arrival_time = ensure_aware_datetime(s2.arrival_time)
-            flight, created = Flight.objects.get_or_create(
+            flights = Flight.objects.filter(
                 departure_airport=s1.airport,
                 arrival_airport=s2.airport,
-                departure_time=departure_time,
-                defaults={
-                    'arrival_time': arrival_time,
-                    'airline': airline,
-                    'flight_number': flight_num,
-                    'economy_seats': 150,
-                    'business_seats': 20,
-                    'first_class_seats': 10,
-                    'economy_price': 5000,
-                    'business_price': 10000,
-                    'first_class_price': 15000,
-                }
+                departure_time=departure_time
             )
+            if flights.exists():
+                flight = flights.first()
+                created = False
+            else:
+                flight = Flight.objects.create(
+                    departure_airport=s1.airport,
+                    arrival_airport=s2.airport,
+                    departure_time=departure_time,
+                    arrival_time=arrival_time,
+                    airline=airline,
+                    flight_number=flight_num,
+                    economy_seats=150,
+                    business_seats=20,
+                    first_class_seats=10,
+                    economy_price=5000,
+                    business_price=10000,
+                    first_class_price=15000,
+                )
+                created = True
             
             if not created:
                 flight.airline = airline
