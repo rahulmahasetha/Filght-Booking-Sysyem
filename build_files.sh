@@ -5,12 +5,13 @@ set -e
 
 echo "==> Current directory: $(pwd)"
 echo "==> Python version: $(python3 --version)"
-echo "==> pip version: $(pip --version 2>/dev/null || echo 'pip not found')"
-echo "==> uv version: $(uv --version 2>/dev/null || echo 'uv not found')"
+
+echo "==> Creating virtual environment..."
+python3 -m venv venv
+source venv/bin/activate
 
 echo "==> Installing Python dependencies..."
-# Vercel uses uv-managed Python. Try uv first, then pip with --break-system-packages
-uv pip install -r myproject/requirements.txt --python python3
+pip install -r myproject/requirements.txt
 
 echo "==> Collecting static files..."
 cd myproject
