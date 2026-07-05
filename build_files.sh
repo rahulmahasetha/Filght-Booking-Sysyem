@@ -23,6 +23,9 @@ cp -r media staticfiles/media 2>/dev/null || echo "No media to copy"
 echo "==> Running database migrations..."
 python manage.py migrate --noinput
 
+echo "==> Loading fixture data into database..."
+python manage.py loaddata datadump.json || echo "Data already loaded or skipping..."
+
 echo "==> Creating admin user..."
 python create_superuser.py
 
