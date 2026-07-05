@@ -1,217 +1,226 @@
 {% extends 'base.html' %}
-{% load flight_extras %}
-{% block title %}Payment - Flight Booking{% endblock %}
+{% load custom_filters %}
+{% block title %}Payment{% endblock %}
 
 {% block styles %}
 <style>
 .payment-hero {
-  background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%);
-  padding: 2.5rem 0 1.5rem;
-}
-.payment-hero h1 { color:#fff; font-weight:800; font-size:1.8rem; margin:0; }
-
-/* Steps */
-.booking-steps { display:flex; align-items:center; justify-content:center; gap:0; background:#fff; border-radius:16px; border:1px solid #e2e8f0; padding:1.25rem 2rem; margin-bottom:2rem; }
-.step-circle { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.85rem; }
-.step-circle.active { background:linear-gradient(135deg,#2563eb,#7c3aed); color:#fff; }
-.step-circle.done { background:#dcfce7; color:#16a34a; }
-.step-circle.pending { background:#f1f5f9; color:#94a3b8; }
-.step-label { font-size:0.8rem; font-weight:700; color:#0f172a; }
-.step-label.pending { color:#94a3b8; }
-.step-connector { width:60px; height:2px; background:#e2e8f0; margin:0 8px; }
-.step-item { display:flex; align-items:center; gap:10px; }
-
-/* Booking summary */
-.summary-card {
-  background:#fff; border-radius:16px; border:1px solid #e2e8f0; overflow:hidden;
-}
-.summary-card-header {
-  background:linear-gradient(135deg,#eff6ff,#f5f3ff);
-  border-bottom:1px solid #e2e8f0; padding:1.25rem 1.5rem;
-}
-.summary-card-header h6 { font-weight:800; color:#0f172a; margin:0; font-size:1rem; }
-.summary-card-body { padding:1.5rem; }
-
-/* Route in summary */
-.route-mini { display:flex; align-items:center; gap:12px; margin-bottom:1rem; }
-.route-mini-city { font-size:1.2rem; font-weight:800; color:#0f172a; }
-.route-mini-code { font-size:0.72rem; color:#94a3b8; }
-.route-mini-line { flex:1; border-top:2px dashed #e2e8f0; position:relative; margin:0 8px; }
-.route-mini-plane { color:#2563eb; }
-
-/* Passenger list */
-.pax-item { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid #f8fafc; }
-.pax-item:last-child { border-bottom:none; }
-.pax-avatar { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#eff6ff,#dbeafe); display:flex; align-items:center; justify-content:center; color:#2563eb; font-size:0.85rem; }
-.pax-name { font-weight:700; font-size:0.875rem; color:#0f172a; }
-.pax-details { font-size:0.72rem; color:#94a3b8; }
-
-/* Price table */
-.price-line { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f8fafc; font-size:0.875rem; }
-.price-line.total { border-top:2px solid #e2e8f0; border-bottom:none; padding-top:12px; margin-top:4px; }
-.price-line.discount { color:#16a34a; }
-
-/* Payment method */
-.payment-method-card {
-  background:#fff; border-radius:16px; border:1px solid #e2e8f0; overflow:hidden; margin-bottom:1rem;
-}
-.payment-method-header { padding:1.25rem 1.5rem; border-bottom:1px solid #f1f5f9; background:#f8fafc; }
-.method-option {
-  border:2px solid #e2e8f0; border-radius:12px; padding:1.25rem;
-  cursor:pointer; transition:all 0.2s; margin-bottom:1rem;
-}
-.method-option.selected { border-color:#2563eb; background:#eff6ff; }
-.method-option input[type="radio"] { display:none; }
-.method-label { display:flex; align-items:center; gap:12px; cursor:pointer; margin:0; width:100%; }
-.method-icon { width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; }
-.method-icon.card-icon { background:#eff6ff; color:#2563eb; }
-.method-icon.paypal-icon { background:#fff8e1; color:#f59e0b; }
-.method-name { font-weight:700; color:#0f172a; }
-.method-sub { font-size:0.75rem; color:#94a3b8; }
-
-/* Coupon section */
-.coupon-card {
-  border:2px dashed #86efac; border-radius:14px; padding:1.25rem;
-  background:linear-gradient(135deg,#f0fdf4,#dcfce7);
-  margin-bottom:1.5rem;
-}
-.coupon-card label { font-weight:700; color:#166534; font-size:0.85rem; margin-bottom:8px; display:block; }
-
-/* Card form */
-.card-form { background:#f8fafc; border-radius:12px; padding:1.25rem; border:1px solid #f1f5f9; margin-top:1rem; }
-
-/* Payment logos */
-.payment-logos { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-.payment-logo { background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:6px 12px; height:36px; display:flex; align-items:center; }
-.payment-logo img { height:20px; width:auto; object-fit:contain; }
-
-.btn-pay {
-  width:100%; padding:16px;
-  background:linear-gradient(135deg,#2563eb,#7c3aed);
-  border:none; border-radius:12px;
-  color:#fff; font-weight:800; font-size:1.05rem;
-  box-shadow:0 4px 16px rgba(37,99,235,0.35);
-  transition:all 0.25s; cursor:pointer;
-}
-.btn-pay:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(37,99,235,0.45); color:#fff; }
-
-/* Dark Mode Overrides */
-[data-theme="dark"] .booking-steps,
-[data-theme="dark"] .summary-card,
-[data-theme="dark"] .payment-method-card,
-[data-theme="dark"] .method-option,
-[data-theme="dark"] .card-form,
-[data-theme="dark"] .payment-logo {
-  background: #1e293b !important;
-  border-color: #334155 !important;
-  color: #f8fafc !important;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--border);
 }
 
-[data-theme="dark"] .summary-card-header,
-[data-theme="dark"] .payment-method-header {
-  background: #0f172a !important;
-  border-bottom-color: #334155 !important;
+.payment-hero h1 { color: var(--text); font-weight: 800; font-size: 1.6rem; margin: 0; }
+
+/* Ticket overall */
+.ticket-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
 }
 
-[data-theme="dark"] .step-label,
-[data-theme="dark"] .summary-card-header h6,
-[data-theme="dark"] .route-mini-city,
-[data-theme="dark"] .pax-name,
-[data-theme="dark"] .method-name,
-[data-theme="dark"] h6,
-[data-theme="dark"] .fw-800,
-[data-theme="dark"] .fw-700,
-[data-theme="dark"] .fw-bold {
-  color: #f8fafc !important;
-}
-[data-theme="dark"] .summary-card-header,
-[data-theme="dark"] .payment-method-header {
-  background: #0f172a !important;
-  border-bottom-color: #334155 !important;
-}
-[data-theme="dark"] .step-label,
-[data-theme="dark"] .summary-card-header h6,
-[data-theme="dark"] .route-mini-city,
-[data-theme="dark"] .pax-name,
-[data-theme="dark"] .method-name {
-  color: #f8fafc !important;
-}
-[data-theme="dark"] .step-circle.pending {
-  background: #0f172a;
-  color: #475569;
-}
-[data-theme="dark"] .step-connector {
-  background: #334155 !important;
-}
-[data-theme="dark"] .method-option.selected {
-  background: rgba(37, 99, 235, 0.1) !important;
-  border-color: #2563eb !important;
-}
-[data-theme="dark"] .method-icon.card-icon {
-  background: #0f172a;
-  color: #60a5fa;
-}
-[data-theme="dark"] .coupon-card {
-  background: linear-gradient(135deg, #064e3b, #065f46) !important;
-  border-color: #065f46 !important;
-}
-[data-theme="dark"] .coupon-card label,
-[data-theme="dark"] .coupon-card small {
-  color: #d1fae5 !important;
-}
-[data-theme="dark"] .pax-avatar {
-  background: #0f172a;
-  color: #60a5fa;
-}
-[data-theme="dark"] .price-line,
-[data-theme="dark"] .pax-item {
-  border-bottom-color: #334155 !important;
-}
-[data-theme="dark"] .route-mini-line {
-  border-top-color: #334155 !important;
-}
-[data-theme="dark"] .price-line.total {
-  border-top-color: #334155 !important;
+.ticket-header {
+  background: var(--surface-2);
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-/* Professional Stop Visualization */
-.stop-line-bar {
-  height: 3px;
-  background: #e2e8f0;
-  border-radius: 4px;
-  width: 100%;
+.ticket-body {
+  padding: 1rem;
+}
+
+/* Route Display */
+.route-display {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  background: var(--surface-2);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.route-point {
+  flex: 1;
+}
+.route-point:last-child { text-align: right; }
+.route-time { font-size: 1.3rem; font-weight: 900; color: var(--text); margin-bottom: 4px; }
+.route-city { font-size: 1rem; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+.route-detail { font-size: 0.75rem; color: var(--text-2); font-weight: 600; }
+
+.route-center {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   position: relative;
-  margin: 12px 0;
+  padding: 0 1rem;
 }
-.stop-line-active {
-  position: absolute;
-  height: 100%;
-  background: #ef4444;
-  border-radius: 4px;
-  left: 0;
-  right: 0;
+.stop-line-bar { width: 100%; height: 2px; background: var(--border); position: relative; margin-bottom: 10px; }
+.stop-line-active { position: absolute; top: 0; left: 0; height: 100%; background: var(--primary); width: 100%; }
+.stop-dot { position: absolute; top: -4px; width: 10px; height: 10px; background: var(--surface); border: 2px solid var(--primary); border-radius: 50%; transform: translateX(-50%); }
+.stop-label { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); font-size: 0.65rem; font-weight: 700; color: var(--text-3); text-transform: uppercase; }
+
+/* Info Grid */
+.info-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  background: var(--surface-2);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  margin-bottom: 0.75rem;
 }
-.stop-dot {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background: #fff;
-  border: 2.5px solid #ef4444;
-  border-radius: 50%;
-  top: -3.5px;
-  z-index: 2;
-  box-shadow: 0 0 0 4px #fff;
+.info-item { display: flex; flex-direction: column; }
+.info-label { font-size: 0.65rem; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+.info-value { font-size: 0.85rem; font-weight: 800; color: var(--text); }
+
+/* Horizontal Pax Card */
+.pax-card-hz {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
 }
-.stop-label {
-  position: absolute;
-  top: -18px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 0.6rem;
-  font-weight: 800;
-  color: #475569;
+.pax-icon {
+  width: 40px; height: 40px; border-radius: 50%; background: rgba(37, 99, 235, 0.1); color: var(--primary);
+  display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;
+}
+.pax-name { font-size: 0.95rem; font-weight: 800; color: var(--text); }
+.pax-detail-group { display: flex; flex-direction: column; }
+.pax-detail-label { font-size: 0.65rem; color: var(--text-3); font-weight: 700; text-transform: uppercase; margin-bottom: 2px; }
+.pax-detail-value { font-size: 0.8rem; color: var(--text); font-weight: 700; }
+
+/* Payment Horizontal Summary for sidebar */
+.payment-summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.payment-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.payment-row:last-child { border-bottom: none; }
+
+.payment-label { font-size: 0.75rem; color: var(--text-2); font-weight: 600; }
+.payment-value { font-size: 0.8rem; color: var(--text); font-weight: 700; }
+
+.payment-total-block {
+  background: var(--surface-2);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+.payment-total-label { font-weight: 800; color: var(--text); }
+.payment-total-amount { font-weight: 900; font-size: 1.25rem; color: var(--primary); }
+
+/* Payment methods */
+.payment-method-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.method-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: all var(--duration) var(--ease);
+}
+
+.method-option:hover,
+.method-option.selected {
+  border-color: var(--primary);
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.method-icon {
+  width: 40px; height: 40px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  color: var(--primary);
+}
+
+/* Pay button */
+.btn-pay {
+  width: 100%;
+  padding: 14px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all var(--duration) var(--ease);
+}
+
+.btn-pay:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+/* Coupon */
+.coupon-input {
+  display: flex;
+  gap: 8px;
+}
+
+.coupon-input .form-control {
+  flex: 1;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.coupon-input .btn {
   white-space: nowrap;
 }
+
+.step-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 0.7rem;
+  background: var(--surface-2);
+  color: var(--text-3);
+  border: 1px solid var(--border);
+}
+
+.step-dot.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.step-dot.completed { background: var(--success); color: #fff; border-color: var(--success); }
+.step-line { flex: 1; height: 1px; background: var(--border); margin: 0 6px; }
+.step-label { font-size: 0.7rem; font-weight: 600; color: var(--text-3); margin-top: 4px; text-align: center; }
+.step-label.active { color: var(--accent); }
 </style>
 {% endblock %}
 
@@ -253,113 +262,98 @@
       <form method="POST" id="payment-form">
         {% csrf_token %}
 
-        <!-- Coupon -->
-        <div class="coupon-card">
-          <label><i class="bi bi-tag-fill me-2"></i>Have a Coupon Code?</label>
-          <div class="input-group">
-            <input type="text" name="coupon_code" class="form-control" placeholder="Enter coupon code"
-              id="coupon-input" value="{{ coupon_applied|default:'' }}" style="border-radius:10px 0 0 10px;">
-            <button class="btn btn-success px-4" type="submit" name="apply_coupon" value="1"
-              style="border-radius:0 10px 10px 0;">Apply</button>
+        <!-- Payment Card Container -->
+        <div class="ticket-card">
+          <div class="ticket-header">
+            <div class="fw-800" style="font-weight:800;color:var(--text);">
+              <i class="bi bi-credit-card-fill me-2" style="color:var(--primary);"></i>Choose Payment Method
+            </div>
           </div>
-          <div class="mt-2 d-flex align-items-center gap-2">
-            <span class="badge" style="background:#dcfce7; color:#15803d; font-size:0.72rem;">
-              <i class="bi bi-gift-fill me-1"></i>TIP
-            </span>
-            <small style="color:#166534; font-weight:600;">Use <strong>UDAAAN</strong> for 100% off on your first booking!</small>
-          </div>
-        </div>
-
-        <!-- Payment Methods -->
-        <div class="payment-method-card">
-          <div class="payment-method-header">
-            <h6 class="fw-800 mb-0" style="font-weight:800;">Choose Payment Method</h6>
-          </div>
-          <div class="p-4">
-            <!-- Credit Card -->
+          <div class="ticket-body">
+            <!-- Credit Card Option -->
             <div class="method-option selected" id="method-card" onclick="selectMethod('credit_card', this)">
-              <label class="method-label">
-                <input type="radio" name="payment_method" id="credit-card" value="credit_card" checked>
-                <div class="method-icon card-icon"><i class="bi bi-credit-card-2-front-fill"></i></div>
+              <label class="method-label d-flex align-items-center w-100 mb-0" style="cursor: pointer;">
+                <input type="radio" name="payment_method" id="credit-card" value="credit_card" checked class="me-2">
+                <div class="method-icon card-icon me-2"><i class="bi bi-credit-card-2-front-fill"></i></div>
                 <div>
-                  <div class="method-name">Credit / Debit Card</div>
-                  <div class="method-sub">Visa, Mastercard, Amex, RuPay</div>
+                  <div class="method-name fw-bold" style="font-size: 0.9rem; color: var(--text);">Credit / Debit Card</div>
+                  <div class="method-sub text-muted" style="font-size: 0.75rem;">Visa, Mastercard, Amex, RuPay</div>
                 </div>
-                <div class="payment-logos ms-auto">
-                  <div class="payment-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" alt="Visa"></div>
-                  <div class="payment-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="MC"></div>
+                <div class="payment-logos ms-auto d-flex align-items-center gap-2">
+                  <div class="payment-logo" style="height: 18px;"><img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" alt="Visa" style="height: 100%; object-fit: contain;"></div>
+                  <div class="payment-logo" style="height: 18px;"><img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="MC" style="height: 100%; object-fit: contain;"></div>
                 </div>
               </label>
             </div>
 
             <!-- Card form -->
-            <div id="credit-card-form" class="card-form mb-3">
+            <div id="credit-card-form" class="card-form mb-4 mt-3">
               <div class="row g-3">
                 <div class="col-12">
-                  <label class="form-label">Card Number</label>
+                  <label class="form-label" style="font-size: 0.75rem; font-weight: 700; color: var(--text-3); text-transform: uppercase;">Card Number</label>
                   <input type="text" class="form-control" id="card-number" placeholder="1234 5678 9012 3456" maxlength="19">
                   <div class="invalid-feedback">Please enter a valid 15–16 digit card number.</div>
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label">Name on Card</label>
+                  <label class="form-label" style="font-size: 0.75rem; font-weight: 700; color: var(--text-3); text-transform: uppercase;">Name on Card</label>
                   <input type="text" class="form-control" id="card-name" placeholder="Full Name">
                   <div class="invalid-feedback">Please enter the name on card.</div>
                 </div>
                 <div class="col-md-3">
-                  <label class="form-label">Expiry</label>
+                  <label class="form-label" style="font-size: 0.75rem; font-weight: 700; color: var(--text-3); text-transform: uppercase;">Expiry</label>
                   <input type="text" class="form-control" id="card-expiry" placeholder="MM/YY" maxlength="5">
                   <div class="invalid-feedback">Format: MM/YY.</div>
                 </div>
                 <div class="col-md-3">
-                  <label class="form-label">CVV</label>
+                  <label class="form-label" style="font-size: 0.75rem; font-weight: 700; color: var(--text-3); text-transform: uppercase;">CVV</label>
                   <input type="text" class="form-control" id="card-cvv" placeholder="123" maxlength="4">
                   <div class="invalid-feedback">Valid 3–4 digit CVV.</div>
                 </div>
               </div>
             </div>
 
-            <!-- PayPal -->
+            <!-- PayPal Option -->
             <div class="method-option" id="method-paypal" onclick="selectMethod('paypal', this)">
-              <label class="method-label">
-                <input type="radio" name="payment_method" id="paypal" value="paypal">
-                <div class="method-icon paypal-icon"><i class="bi bi-paypal"></i></div>
+              <label class="method-label d-flex align-items-center w-100 mb-0" style="cursor: pointer;">
+                <input type="radio" name="payment_method" id="paypal" value="paypal" class="me-2">
+                <div class="method-icon paypal-icon me-2"><i class="bi bi-paypal"></i></div>
                 <div>
-                  <div class="method-name">PayPal</div>
-                  <div class="method-sub">Pay securely with your PayPal account</div>
+                  <div class="method-name fw-bold" style="font-size: 0.9rem; color: var(--text);">PayPal</div>
+                  <div class="method-sub text-muted" style="font-size: 0.75rem;">Pay securely with your PayPal account</div>
                 </div>
               </label>
             </div>
-          </div>
-        </div>
 
-        <!-- Pay button -->
-        <button type="submit" name="complete_payment" value="1" class="btn-pay">
-          <i class="bi bi-lock-fill me-2"></i>
-          Pay ₹{{ final_price|default:booking.total_price|floatformat:2 }} Securely
-        </button>
-        <div class="text-center mt-3">
-          <small class="text-muted">
-            <i class="bi bi-shield-lock me-1"></i>256-bit SSL encrypted. Your payment data is never stored.
-          </small>
+            <!-- Pay button -->
+            <button type="submit" name="complete_payment" value="1" class="btn-pay mt-4">
+              <i class="bi bi-lock-fill me-2"></i>
+              Pay ₹{{ final_price|default:booking.total_price|floatformat:2 }} Securely
+            </button>
+            <div class="text-center mt-3">
+              <small class="text-muted" style="font-size: 0.75rem;">
+                <i class="bi bi-shield-lock me-1"></i>256-bit SSL encrypted. Your payment data is never stored.
+              </small>
+            </div>
+          </div>
         </div>
       </form>
     </div>
 
     <!-- Right: Booking Summary -->
     <div class="col-lg-5">
-      <div class="summary-card mb-3">
-        <div class="summary-card-header">
-          <h6><i class="bi bi-journal-bookmark-fill me-2" style="color:#2563eb;"></i>Booking Summary</h6>
-          <div style="font-family:monospace; font-size:0.78rem; color:#64748b; font-weight:600; margin-top:4px;"># {{ booking.reference }}</div>
+      <div class="ticket-card mb-3" style="position: sticky; top: 80px;">
+        <div class="ticket-header">
+          <div class="fw-800" style="font-weight:800;color:var(--text);"><i class="bi bi-receipt me-2" style="color:var(--primary);"></i>Booking Summary</div>
+          <div style="font-family:monospace; font-size:0.78rem; color:var(--text-3); font-weight:600; margin-top:4px;"># {{ booking.reference }}</div>
         </div>
-        <div class="summary-card-body">
+        <div class="ticket-body">
           <!-- Route -->
-          <div class="route-mini mb-3">
-            <div class="text-center">
-              <div class="route-mini-city">{% if booking.booking_segments.exists %}{{ booking.booking_segments.first.flight.departure_airport.city }}{% else %}{{ booking.flight.departure_airport.city }}{% endif %}</div>
-              <div class="route-mini-code">{% if booking.booking_segments.exists %}{{ booking.booking_segments.first.flight.departure_airport.code }}{% else %}{{ booking.flight.departure_airport.code }}{% endif %}</div>
+          <div class="route-display mb-3">
+            <div class="route-point text-start">
+              <div class="route-city">{% if booking.booking_segments.exists %}{{ booking.booking_segments.first.flight.departure_airport.city }}{% else %}{{ booking.flight.departure_airport.city }}{% endif %}</div>
+              <div class="route-detail mt-1">{% if booking.booking_segments.exists %}{{ booking.booking_segments.first.flight.departure_airport.code }}{% else %}{{ booking.flight.departure_airport.code }}{% endif %}</div>
             </div>
-            <div style="flex:1; padding:0 1.5rem; position:relative;">
+            <div class="route-center">
               <div class="stop-line-bar">
                 <div class="stop-line-active"></div>
                 {% if booking.booking_segments.count > 1 %}
@@ -375,39 +369,28 @@
                 {% endif %}
               </div>
             </div>
-            <div class="text-center">
-              <div class="route-mini-city">{% if booking.booking_segments.exists %}{{ booking.booking_segments.last.flight.arrival_airport.city }}{% else %}{{ booking.flight.arrival_airport.city }}{% endif %}</div>
-              <div class="route-mini-code">{% if booking.booking_segments.exists %}{{ booking.booking_segments.last.flight.arrival_airport.code }}{% else %}{{ booking.flight.arrival_airport.code }}{% endif %}</div>
+            <div class="route-point text-end">
+              <div class="route-city">{% if booking.booking_segments.exists %}{{ booking.booking_segments.last.flight.arrival_airport.city }}{% else %}{{ booking.flight.arrival_airport.city }}{% endif %}</div>
+              <div class="route-detail mt-1">{% if booking.booking_segments.exists %}{{ booking.booking_segments.last.flight.arrival_airport.code }}{% else %}{{ booking.flight.arrival_airport.code }}{% endif %}</div>
             </div>
           </div>
-          <div class="d-flex gap-2 flex-wrap mb-3">
+          
+          <div class="d-flex gap-2 flex-wrap mb-4">
             <span style="background:#f0fdf4; color:#16a34a; font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:99px;">{{ booking.travel_class }}</span>
             <span style="background:#f8fafc; color:#64748b; font-size:0.72rem; font-weight:600; padding:3px 10px; border-radius:99px;">{{ booking.flight.departure_time|date:"M d, Y" }}</span>
           </div>
 
           <!-- Segments -->
-          <div style="font-size:0.72rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Itinerary</div>
-            <style>
-              [data-theme="dark"] .summary-card .route-mini,
-              [data-theme="dark"] .summary-card .route-mini-city,
-              [data-theme="dark"] .summary-card .route-mini-code,
-              [data-theme="dark"] .summary-card .fw-bold,
-              [data-theme="dark"] .summary-card .text-muted {
-                color: #f8fafc !important;
-              }
-              [data-theme="dark"] .summary-card .d-flex.justify-content-between.align-items-center {
-                background: #1e293b !important;
-                border-color: #334155 !important;
-              }
-            </style>
+          <!-- Itinerary -->
+          <div style="font-size:0.72rem; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Itinerary</div>
           {% for seg in booking.booking_segments.all %}
-          <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded" style="background:#f8fafc; border:1px solid #e2e8f0;">
+          <div class="d-flex justify-content-between align-items-center mb-2 pb-2" style="border-bottom:1px solid var(--border);">
             <div class="small">
-                <div class="fw-bold">{{ seg.flight.departure_airport.code }} ✈ {{ seg.flight.arrival_airport.code }}</div>
+                <div class="fw-bold" style="color:var(--text); font-size:0.85rem;">{{ seg.flight.departure_airport.code }} ✈ {{ seg.flight.arrival_airport.code }}</div>
                 <div class="text-muted" style="font-size:0.65rem;">{{ seg.flight.airline.name }} · {{ seg.flight.airline.code }}{{ seg.flight.flight_number }}</div>
             </div>
             <div class="text-end">
-                <div class="fw-bold" style="font-size:0.75rem;">{{ seg.flight.departure_time|time:"H:i" }}</div>
+                <div class="fw-bold" style="font-size:0.75rem; color:var(--text);">{{ seg.flight.departure_time|time:"H:i" }}</div>
                 {% if seg.layover_duration %}
                 <div class="text-warning" style="font-size:0.6rem; font-weight:700;">+{{ seg.layover_duration }} layover</div>
                 {% endif %}
@@ -416,59 +399,45 @@
           {% endfor %}
 
           <!-- Passengers -->
-          <div style="font-size:0.72rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Passengers</div>
+          <div class="mt-4" style="font-size:0.72rem; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Passengers</div>
           {% for passenger in passengers %}
-          <div class="pax-item">
-            <div class="pax-avatar"><i class="bi bi-person-fill"></i></div>
-            <div>
-              <div class="pax-name">{{ passenger.first_name }} {{ passenger.last_name }}</div>
-              <div class="pax-details">{{ passenger.get_id_type_display }}: {{ passenger.id_number }}</div>
+          <div class="d-flex align-items-center mb-2 pb-2" style="border-bottom: 1px solid var(--border); gap:0.75rem;">
+            <div class="pax-icon" style="width:30px; height:30px; font-size:1rem; background: rgba(37, 99, 235, 0.1); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-person-fill"></i></div>
+            <div style="flex:1;">
+              <div class="pax-name" style="font-size:0.85rem; font-weight: 800; color: var(--text);">{{ passenger.first_name }} {{ passenger.last_name }}</div>
+              <div class="text-muted" style="font-size: 0.7rem; font-weight:600;">{{ passenger.get_id_type_display }}: {{ passenger.id_number }}</div>
             </div>
           </div>
           {% endfor %}
-        </div>
-      </div>
-
-      <!-- Price breakdown -->
-      <div class="summary-card">
-        <div class="summary-card-header">
-          <h6><i class="bi bi-receipt me-2" style="color:#2563eb;"></i>Price Breakdown</h6>
-        </div>
-        <div class="summary-card-body">
-          {% if booking.fare_type == 'STUDENT' %}
-          <div class="price-line">
-            <span class="text-muted">Original Total</span>
-            <span class="fw-semibold">₹{{ booking.total_price|add:booking.discount_amount|floatformat:2 }}</span>
-          </div>
-          <div class="price-line discount" style="color: #16a34a; font-weight: 700;">
-            <span><i class="bi bi-percent"></i> Student Discount (10%)</span>
-            <span>−₹{{ booking.discount_amount|floatformat:2 }}</span>
-          </div>
-          <div class="price-line">
-            <span class="text-muted">Final Total</span>
-            <span class="fw-semibold">₹{{ booking.total_price|floatformat:2 }}</span>
-          </div>
-          {% else %}
-          <div class="price-line">
-            <span class="text-muted">Base Fare ({{ booking.nums_passengers }} × ₹{{ booking.per_passenger_price|floatformat:2 }})</span>
-            <span class="fw-semibold">₹{{ booking.total_price|floatformat:2 }}</span>
-          </div>
-          {% endif %}
-          {% for passenger in passengers %}
-          <div class="price-line">
-            <span class="text-muted">Passenger {{ forloop.counter }} ({{ passenger.first_name }}{% if passenger.is_child %} - Child{% endif %})</span>
-            <span>₹{% if passenger.is_child and passenger.age <= 5 %}0.00{% else %}{{ booking.per_passenger_price|floatformat:2 }}{% endif %}</span>
-          </div>
-          {% endfor %}
-          {% if discount %}
-          <div class="price-line discount">
-            <span><i class="bi bi-gift-fill me-1"></i>First Booking Discount</span>
-            <span>−₹{{ discount|floatformat:2 }}</span>
-          </div>
-          {% endif %}
-          <div class="price-line total">
-            <span class="fw-800" style="font-weight:800;font-size:1rem;">Total Amount</span>
-            <span class="fw-900" style="font-weight:900;font-size:1.4rem;color:#2563eb;" id="final-amount">₹{% if coupon_applied %}{{ final_price|floatformat:2 }}{% else %}{{ booking.total_price|floatformat:2 }}{% endif %}</span>
+          
+          <!-- Price breakdown -->
+          <div class="mt-4 pt-3" style="border-top:1px dashed var(--border);">
+            <div style="font-size:0.72rem; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Price Breakdown</div>
+            
+            <div class="payment-row">
+              <span class="payment-label">Base Fare ({{ booking.nums_passengers }} × ₹{{ booking.per_passenger_price|floatformat:2 }})</span>
+              <span class="payment-value">₹{{ price_breakdown.base_fare|add:booking.discount_amount|floatformat:2 }}</span>
+            </div>
+            {% if booking.fare_type == 'STUDENT' %}
+            <div class="payment-row" style="color: #16a34a;">
+              <span class="payment-label" style="color: #16a34a;"><i class="bi bi-percent"></i> Student Discount (10%)</span>
+              <span class="payment-value">−₹{{ booking.discount_amount|floatformat:2 }}</span>
+            </div>
+            {% endif %}
+            <div class="payment-row">
+              <span class="payment-label">GST (18%)</span>
+              <span class="payment-value">₹{{ price_breakdown.gst_amount|floatformat:2 }}</span>
+            </div>
+            {% if discount %}
+            <div class="payment-row" style="color: var(--success);">
+              <span class="payment-label" style="color: var(--success);"><i class="bi bi-gift-fill me-1"></i>First Booking Discount</span>
+              <span class="payment-value">−₹{{ discount|floatformat:2 }}</span>
+            </div>
+            {% endif %}
+            <div class="payment-total-block">
+              <span class="payment-total-label">Total Amount</span>
+              <span class="payment-total-amount" id="final-amount">₹{% if coupon_applied %}0.00{% else %}{{ price_breakdown.total|floatformat:2 }}{% endif %}</span>
+            </div>
           </div>
         </div>
       </div>

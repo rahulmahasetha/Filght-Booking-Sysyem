@@ -36,7 +36,16 @@ class FlightRouteAdmin(admin.ModelAdmin):
 class FlightAdmin(admin.ModelAdmin):
     list_display = ('flight_number', 'airline', 'route', 'departure_time', 'stops', 'cabin_allowance', 'check_in_allowance', 'available_seats', 'dynamic_pricing_status')
     list_editable = ('cabin_allowance', 'check_in_allowance')
-    search_fields = ('flight_number', 'airline__name', 'departure_airport__city', 'arrival_airport__city', 'cabin_allowance', 'check_in_allowance')
+    search_fields = (
+        'flight_number', 
+        'airline__name', 
+        'departure_airport__city', 
+        'arrival_airport__city',
+        'departure_airport__code',
+        'arrival_airport__code',
+        'departure_airport__name',
+        'arrival_airport__name'
+    )
     list_filter = ('airline', 'departure_time', 'departure_airport')
     date_hierarchy = 'departure_time'
     fieldsets = (
@@ -50,6 +59,24 @@ class FlightAdmin(admin.ModelAdmin):
             'fields': ('cabin_allowance', 'check_in_allowance')
         }),
     )
+    def get_queryset(self, request):
+        from django.utils import timezone
+        import datetime
+        from django.db.models import Case, When, Value, IntegerField
+        qs = super().get_queryset(request)
+        now = timezone.now()
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = today_start + datetime.timedelta(days=1)
+        
+        return qs.annotate(
+            flight_category=Case(
+                When(departure_time__gte=today_start, departure_time__lt=today_end, then=Value(0)),
+                When(departure_time__gte=today_end, then=Value(1)),
+                default=Value(2),
+                output_field=IntegerField(),
+            )
+        ).order_by('flight_category', 'departure_time')
+
     def route(self, obj):
         return f"{obj.departure_airport.code} ✈ {obj.arrival_airport.code}"
     def available_seats(self, obj):
@@ -67,7 +94,7 @@ class BookingSegmentInline(admin.TabularInline):
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ('reference', 'user', 'travel_class', 'fare_type', 'nums_passengers', 'discount_amount', 'total_price', 'status_badge')
+    list_display = ('reference', 'user', 'travel_class', 'fare_type', 'nums_passengers', 'discount_amount', 'base_fare', 'gst_amount', 'final_total', 'status_badge')
     search_fields = ('reference', 'user__username')
     list_filter = ('status', 'travel_class', 'fare_type', 'booking_date')
     inlines = [BookingSegmentInline]

@@ -167,6 +167,21 @@ class Booking(models.Model):
             return self.flight.get_price_for_class(self.travel_class)
         return Decimal('0.00')
 
+    @property
+    def base_fare(self):
+        """Dynamic base fare excluding GST"""
+        return round((self.per_passenger_price * Decimal(self.nums_passengers)) - self.discount_amount, 2)
+
+    @property
+    def gst_amount(self):
+        """18% GST on base fare"""
+        return round(self.base_fare * Decimal('0.18'), 2)
+
+    @property
+    def final_total(self):
+        """Total amount including GST"""
+        return self.base_fare + self.gst_amount
+
 class Passenger(models.Model):
     ID_TYPE_CHOICES = [('PASSPORT', 'Passport'), ('NATIONAL_ID', 'National ID'), ('DRIVING_LICENSE', 'Driving License')]
     GENDER_CHOICES = [('MALE', 'Male'), ('FEMALE', 'Female'), ('OTHER', 'Other')]

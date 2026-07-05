@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 
 <head>
   <meta charset="utf-8">
@@ -28,6 +28,16 @@
       --bg-light: #f8fafc;
       --radius: 14px;
       --radius-sm: 8px;
+      --surface: #ffffff;
+      --surface-2: #f1f5f9;
+      --text: #0f172a;
+      --text-2: #475569;
+      --text-3: #64748b;
+      --border-hover: #cbd5e1;
+      --accent-hover: #d97706;
+      --accent-soft: #fef3c7;
+      --ease: ease;
+      --duration: 0.25s;
       --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.05);
       --shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.05);
       --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
@@ -39,6 +49,14 @@
       ============================================================ */
     [data-theme="dark"] {
       --bg-light: #0f172a;
+      --surface: #1e293b;
+      --surface-2: #334155;
+      --text: #f8fafc;
+      --text-2: #cbd5e1;
+      --text-3: #94a3b8;
+      --border-hover: #475569;
+      --accent-hover: #d97706;
+      --accent-soft: #451a03;
       --dark: #f8fafc;
       --dark-2: #e2e8f0;
       --border: #334155;
@@ -662,11 +680,61 @@
       font-size: 0.7rem;
     }
 
-    /* ============================================================
-         PAGE BLOCKS
-      ============================================================ */
-    {% block styles %}{% endblock %}
+    /* Universal Airline Logo Styling */
+    .airline-logo img, 
+    .details-airline-logo, 
+    .booking-airline-logo, 
+    .ticket-airline-logo, 
+    .timeline-airline-logo,
+    .flight-mini-logo,
+    .rb-airline-logo,
+    .price-itinerary-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      object-fit: contain;
+      border: 1px solid var(--border);
+      padding: 3px;
+      background: #ffffff;
+    }
+
+    /* Universal Payment Logo Styling */
+    .payment-logo img {
+      height: 24px;
+      width: auto;
+      object-fit: contain;
+      border-radius: var(--radius-sm);
+      background: #ffffff;
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+    }
+
+    /* Universal Profile Avatar Styling */
+    .profile-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--surface-2);
+      background: var(--surface-2);
+    }
+
+    /* Universal Booking Steps Progress Bar */
+    .booking-steps { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+    .step-item { display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 1; }
+    .step-circle { width: 36px; height: 36px; border-radius: 50%; background: var(--surface-2); color: var(--text-3); display: flex; align-items: center; justify-content: center; font-weight: 800; border: 2px solid var(--border); }
+    .step-circle.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .step-circle.done { background: var(--success); color: #fff; border-color: var(--success); }
+    .step-circle.pending { background: var(--surface-2); color: var(--text-3); }
+    .step-label { font-size: 0.75rem; font-weight: 700; color: var(--text-2); }
+    .step-label.pending { color: var(--text-3); }
+    .step-connector { flex: 1; height: 3px; background: var(--border); margin: 0 10px; border-radius: 2px; transform: translateY(-10px); }
   </style>
+
+  <!-- ============================================================
+       PAGE BLOCKS
+    ============================================================ -->
+  {% block styles %}{% endblock %}
 </head>
 
 <body>
@@ -704,10 +772,7 @@
           </li>
         </ul>
         <div class="d-flex align-items-center gap-2">
-          <button id="themeToggle" class="nav-link btn-nav-login border-0 bg-transparent ms-1 me-2" title="Toggle Theme"
-            style="padding: 6px 12px !important; font-size: 1.1rem;">
-            <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
-          </button>
+
           {% if user.is_authenticated %}
           <a href="{% url 'profile' %}" class="nav-user-badge">
             <div class="nav-user-avatar">{{ user.first_name|make_list|first|default:'U' }}</div>
@@ -801,45 +866,7 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    // Theme Toggle Logic
-    document.addEventListener('DOMContentLoaded', () => {
-      const themeToggle = document.getElementById('themeToggle');
-      const themeIcon = document.getElementById('themeIcon');
-      const htmlEl = document.documentElement;
 
-      // 1. Get saved theme
-      const savedTheme = localStorage.getItem('theme');
-      // 2. Detect system preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-      // 3. Determine active theme
-      let currentTheme = savedTheme || (prefersDark ? 'dark' : 'light');
-
-      // Function to apply theme
-      function applyTheme(theme) {
-        if (theme === 'dark') {
-          htmlEl.setAttribute('data-theme', 'dark');
-          themeIcon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
-          themeIcon.style.color = '#fcd34d'; // Soft yellow for sun
-        } else {
-          htmlEl.removeAttribute('data-theme');
-          themeIcon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
-          themeIcon.style.color = ''; // Default color for moon
-        }
-      }
-
-      // Apply on load
-      applyTheme(currentTheme);
-
-      // Toggle on click
-      themeToggle.addEventListener('click', () => {
-        currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        localStorage.setItem('theme', currentTheme);
-        applyTheme(currentTheme);
-      });
-    });
-  </script>
   {% block scripts %}{% endblock %}
 </body>
 

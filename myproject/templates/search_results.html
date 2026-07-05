@@ -1,754 +1,219 @@
 {% extends 'base.html' %}
-{% block title %}Flight Results{% endblock %}
-{% load static %}
-{% load flight_extras %}
+{% load custom_filters %}
+{% block title %}Search Results{% endblock %}
 
 {% block styles %}
 <style>
-  .results-hero {
-    background: linear-gradient(145deg, #0f172a 0%, #1e3a8a 100%);
-    padding: 2.5rem 0 2rem;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .results-hero::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -10%;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(37, 99, 235, 0.2) 0%, transparent 70%);
-    border-radius: 50%;
-  }
-
-  .results-hero h1 {
-    color: #fff;
-    font-weight: 800;
-    font-size: 2.2rem;
-    letter-spacing: -0.02em;
-  }
-
-  /* Filter sidebar */
-  .filter-sidebar {
-    background: #fff;
-    border-radius: 20px;
-    border: 1px solid #e2e8f0;
-    padding: 1.25rem;
-    position: sticky;
-    top: 100px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-  }
-
-  .filter-section-title {
-    font-size: 0.72rem;
-    font-weight: 800;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 1rem;
-  }
-
-  /* Results Layout */
-  .col-lg-9 {
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-
-  .col-lg-9 .flight-result-card {
-    width: 100%;
-    margin-left: 0;
-    margin-right: 0;
-  }
-
-  /* Results list wrapper to ensure cards are independent */
-  .results-list {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    margin-top: 8px;
-  }
-
-  /* Flight result card */
-  .flight-result-card {
-    background: #1a2332;
-    border-radius: 12px;
-    border: 1px solid #334155;
-    padding: 1.5rem 1.25rem;
-    margin-bottom: 1rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 6px 18px rgba(2,6,23,0.6);
-    position: relative;
-    width: 100%;
-    box-sizing: border-box;
-    overflow: hidden;
-    min-height: 96px;
-    z-index: 0;
-  }
-
-  /* Ensure each card is its own column and contents stack vertically */
-  .flight-result-card {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    height: auto;
-  }
-
-  .flight-result-card:hover {
-    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15);
-    border-color: #3b82f6;
-  }
-
-  .flight-summary {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .airline-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    min-width: 100px;
-  }
-
-  .airline-logo {
-    width: 56px;
-    height: 56px;
-    border-radius: 10px;
-    background: #f3f4f6;
-    border: 2px solid #64748b;
-    padding: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    color: #1f2937;
-    font-size: 0.75rem;
-    text-align: center;
-    overflow: hidden;
-  }
-
-  .airline-name {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #cbd5e1;
-    text-align: center;
-    margin-top: 4px;
-  }
-
-  .departure-section,
-  .arrival-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 110px;
-  }
-
-  .time-large {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: #f1f5f9;
-    line-height: 1;
-  }
-
-  .city-name {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #94a3b8;
-    margin-top: 6px;
-  }
-
-  .duration-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
-    position: relative;
-  }
-
-  .duration-section::before {
-    content: '';
-    position: absolute;
-    left: -50px;
-    right: -50px;
-    top: -8px;
-    height: 2px;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="2" stroke-dasharray="4,4"><line x1="0" y1="12" x2="24" y2="12"/></svg>');
-    background-repeat: repeat-x;
-    background-size: 24px 2px;
-    z-index: 0;
-  }
-
-  .duration-section::after {
-    content: '✈';
-    position: absolute;
-    top: -16px;
-    font-size: 1.5rem;
-    color: #94a3b8;
-    z-index: 1;
-  }
-
-  .duration-time {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #cbd5e1;
-    margin-top: 20px;
-  }
-
-  .stops-info {
-    font-size: 0.75rem;
-    color: #94a3b8;
-    margin-top: 6px;
-  }
-
-  .stops-info.non-stop {
-    color: #10b981;
-    font-weight: 600;
-  }
-
-  .stops-info.connecting {
-    color: #60a5fa;
-    font-weight: 600;
-  }
-
-  .price-section {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    min-width: 130px;
-    gap: 0.5rem;
-  }
-
-  .price-main {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #f1f5f9;
-  }
-
-  .price-label {
-    font-size: 0.75rem;
-    color: #94a3b8;
-  }
-
-  .select-btn-top {
-    background: #3b82f6;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 20px;
-    font-weight: 700;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-top: 4px;
-  }
-
-  .select-btn-top:hover {
-    background: #2563eb;
-    transform: scale(1.02);
-  }
-
-  .airline-info {
-    display: none;
-  }
-
-  .flight-time {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #111827;
-    letter-spacing: -0.02em;
-  }
-
-  .flight-airport {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #475569;
-  }
-
-  .airport-code {
-    font-size: 0.75rem;
-    color: #94a3b8;
-    font-weight: 600;
-    text-transform: uppercase;
-  }
-
-  /* Professional Stop Visualization */
-  .stop-visualization {
-    display: none;
-  }
-
-  .flight-price {
-    font-size: 1.75rem;
-    font-weight: 900;
-    color: #0f172a;
-    letter-spacing: -0.03em;
-  }
-
-  .btn-select {
-    background: #0f172a;
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    padding: 10px 24px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .btn-select:hover {
-    background: #2563eb;
-    transform: scale(1.02);
-    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
-  }
-
-  /* Detailed Itinerary */
-  .itinerary-details {
-    background: rgba(15,23,42,0.9);
-    border-radius: 8px;
-    padding: 0.85rem;
-    margin-top: 0.75rem;
-    border-left: 3px solid rgba(59,130,246,0.18);
-    display: none;
-    position: relative;
-    z-index: 1;
-  }
-
-  .itinerary-details.show {
-    display: block;
-  }
-
-  .view-details-link {
-    color: #60a5fa;
-    font-weight: 600;
-    font-size: 0.8rem;
-    cursor: pointer;
-    text-decoration: underline;
-    transition: color 0.2s;
-    text-align: right;
-    display: inline-block;
-    margin-top: 0.75rem;
-  }
-
-  .view-details-link:hover {
-    color: #3b82f6;
-  }
-
-  .timeline-container {
-    position: relative;
-    padding-left: 2rem;
-  }
-
-  .timeline-item {
-    position: relative;
-    padding-bottom: 2rem;
-  }
-
-  .timeline-dot {
-    position: absolute;
-    left: -2rem;
-    top: 5px;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: #60a5fa;
-    border: 3px solid #1a2332;
-    box-shadow: 0 0 0 1px #60a5fa;
-    z-index: 2;
-  }
-
-  .timeline-line {
-    position: absolute;
-    left: calc(-2rem + 5px);
-    top: 15px;
-    bottom: 0;
-    width: 2px;
-    background: #475569;
-  }
-
-  /* Dark Mode */
-  [data-theme="dark"] .flight-result-card {
-    background: #1a2332;
-    border-color: #334155;
-  }
-
-  [data-theme="dark"] .flight-result-card:hover {
-    border-color: #3b82f6;
-  }
-
-  [data-theme="dark"] .filter-sidebar {
-    background: #1e293b !important;
-    border-color: #334155 !important;
-    color: #f8fafc !important;
-  }
-
-  [data-theme="dark"] .results-hero h1,
-  [data-theme="dark"] .time-large,
-  [data-theme="dark"] .city-name,
-  [data-theme="dark"] .duration-time,
-  [data-theme="dark"] .stops-info,
-  [data-theme="dark"] .airline-name,
-  [data-theme="dark"] .filter-section-title {
-    color: #f8fafc !important;
-  }
-
-  [data-theme="dark"] .flight-mini-card {
-    background: #1e293b !important;
-    border-color: #334155 !important;
-    color: #f8fafc !important;
-  }
-
-  [data-theme="dark"] .flight-mini-airline {
-    color: #f8fafc !important;
-  }
-
-  /* Final result-card layout overrides */
-  .results-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-    margin: 8px 0 0;
-    padding: 0;
-    position: relative;
-    z-index: 1;
-  }
-
-  .results-list > .flight-result-card {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    width: 100%;
-    min-height: 82px;
-    height: auto;
-    padding: 0.6rem 0.9rem;
-    margin: 0;
-    box-sizing: border-box;
-    position: relative;
-    z-index: 1;
-    overflow: hidden;
-    isolation: isolate;
-    background: linear-gradient(135deg, #111827 0%, #172033 58%, #0f172a 100%);
-    border-radius: 10px;
-    border: 1px solid rgba(96, 165, 250, 0.28);
-    box-shadow: 0 10px 24px rgba(2, 6, 23, 0.32);
-    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-  }
-
-  .results-list > .flight-result-card:hover {
-    transform: translateY(-2px);
-    border-color: #3b82f6;
-    box-shadow: 0 20px 46px rgba(15, 23, 42, 0.45), 0 0 0 1px rgba(96, 165, 250, 0.12);
-  }
-
-  .results-list > .flight-result-card .flight-summary {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    width: 100%;
-    min-width: 0;
-    margin: 0;
-  }
-
-  .results-list > .flight-result-card .airline-section {
-    flex: 0 0 60px;
-    min-width: 60px;
-    gap: 0.25rem;
-  }
-
-  .results-list > .flight-result-card .departure-section,
-  .results-list > .flight-result-card .arrival-section {
-    flex: 0 0 76px;
-    min-width: 70px;
-  }
-
-  .results-list > .flight-result-card .duration-section {
-    flex: 1 1 130px;
-    min-width: 120px;
-    padding-top: 20px;
-  }
-
-  .results-list > .flight-result-card .duration-section::before {
-    left: 0;
-    right: 0;
-    top: 7px;
-    background-image: linear-gradient(90deg, rgba(148, 163, 184, 0.15), rgba(203, 213, 225, 0.9) 50%, rgba(148, 163, 184, 0.15));
-  }
-
-  .results-list > .flight-result-card .duration-section::after {
-    content: '✈';
-    font-family: Arial, sans-serif;
-    top: -4px;
-    font-size: 1.15rem;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #e2e8f0;
-    line-height: 1;
-  }
-
-  .results-list > .flight-result-card .duration-time {
-    margin-top: 3px;
-    font-size: 0.72rem;
-  }
-
-  .results-list > .flight-result-card .stops-info {
-    margin-top: 0;
-    line-height: 1.1;
-    position: relative;
-    z-index: 2;
-  }
-
-  .results-list > .flight-result-card .price-section {
-    flex: 0 0 96px;
-    min-width: 96px;
-    gap: 0.25rem;
-  }
-
-  .airline-logo img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-
-  .airline-logo-fallback {
-    display: grid;
-    place-items: center;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #dbeafe, #ffffff);
-    color: #1d4ed8;
-    font-weight: 900;
-    letter-spacing: 0.04em;
-  }
-
-  .details-airline-logo,
-  .details-airline-fallback {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    border: 1px solid rgba(148, 163, 184, 0.45);
-    background: #fff;
-    margin: 0 auto 6px;
-  }
-
-  .details-airline-logo {
-    display: block;
-    object-fit: contain;
-    padding: 4px;
-  }
-
-  .details-airline-fallback {
-    display: grid;
-    place-items: center;
-    background: linear-gradient(135deg, #dbeafe, #fff);
-    color: #1d4ed8;
-    font-size: 0.62rem;
-    font-weight: 900;
-  }
-
-  .flight-policy-grid {
-    display: contents;
-  }
-
-  .flight-policy-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-    padding: 8px 10px;
-    border-radius: 8px;
-    background: rgba(15, 23, 42, 0.62);
-    border: 1px solid rgba(96, 165, 250, 0.18);
-    color: #cbd5e1;
-  }
-
-  .flight-policy-item i {
-    color: #60a5fa;
-    flex: 0 0 auto;
-  }
-
-  .flight-policy-label {
-    display: block;
-    color: #94a3b8;
-    font-size: 0.62rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    line-height: 1;
-  }
-
-  .flight-policy-value {
-    display: block;
-    color: #f8fafc;
-    font-size: 0.72rem;
-    font-weight: 700;
-    margin-top: 3px;
-    line-height: 1.2;
-    overflow-wrap: anywhere;
-  }
-
-  .flight-detail-row {
-    display: grid;
-    grid-template-columns: minmax(120px, 1fr) minmax(150px, 1.1fr) minmax(120px, 1fr) minmax(120px, 0.9fr) minmax(120px, 0.9fr);
-    align-items: center;
-    gap: 12px;
-  }
-
-  .flight-detail-cell {
-    min-width: 0;
-  }
-
-  .flight-detail-cell.arrival {
-    text-align: right;
-  }
-
-  .select-btn-top {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.28);
-  }
-
-  .results-list > .flight-result-card .airline-logo {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    padding: 4px;
-  }
-
-  .results-list > .flight-result-card .airline-name {
-    font-size: 0.66rem;
-    margin-top: 0;
-  }
-
-  .results-list > .flight-result-card .time-large {
-    font-size: 1.22rem;
-  }
-
-  .results-list > .flight-result-card .city-name {
-    font-size: 0.66rem;
-    margin-top: 3px;
-  }
-
-  .results-list > .flight-result-card .price-main {
-    font-size: 1.08rem;
-  }
-
-  .results-list > .flight-result-card .select-btn-top {
-    padding: 6px 12px;
-    font-size: 0.7rem;
-  }
-
-  .results-list > .flight-result-card .view-details-link {
-    font-size: 0.68rem;
-  }
-
-  .results-list > .flight-result-card .price-label,
-  .results-list > .flight-result-card .stops-info {
-    font-size: 0.66rem;
-  }
-
-  .select-btn-top:hover {
-    color: #fff;
-  }
-
-  .details-action {
-    display: flex;
-    justify-content: flex-end;
-    width: 100%;
-  }
-
-  .itinerary-details {
-    width: 100%;
-    height: auto;
-    box-sizing: border-box;
-    overflow: hidden;
-    margin-top: 0;
-  }
-
-  @media (max-width: 991.98px) {
-    .filter-sidebar {
-      position: relative;
-      top: auto;
-    }
-  }
-
-  @media (max-width: 767.98px) {
-    .results-list > .flight-result-card {
-      padding: 1rem;
-      min-height: 0;
-    }
-
-    .results-list > .flight-result-card .flight-summary {
-      display: grid;
-      grid-template-columns: 78px 1fr 1fr;
-      gap: 18px 14px;
-      align-items: center;
-    }
-
-    .results-list > .flight-result-card .airline-section,
-    .results-list > .flight-result-card .departure-section,
-    .results-list > .flight-result-card .arrival-section,
-    .results-list > .flight-result-card .price-section {
-      min-width: 0;
-      flex-basis: auto;
-    }
-
-    .results-list > .flight-result-card .airline-section {
-      grid-row: span 2;
-    }
-
-    .results-list > .flight-result-card .duration-section {
-      grid-column: 2 / 4;
-      min-width: 0;
-      padding-top: 8px;
-    }
-
-    .results-list > .flight-result-card .price-section {
-      grid-column: 1 / 4;
-      align-items: stretch;
-      text-align: center;
-    }
-
-    .select-btn-top {
-      display: flex;
-      width: 100%;
-    }
-
-    .details-action {
-      justify-content: center;
-    }
-
-    .time-large {
-      font-size: 1.45rem;
-    }
-
-    .flight-policy-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-    }
-
-    .flight-detail-row {
-      grid-template-columns: 1fr;
-    }
-
-    .flight-detail-cell,
-    .flight-detail-cell.arrival {
-      text-align: left;
-    }
-  }
+.results-header {
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.results-header h1 { color: var(--text); font-weight: 800; font-size: 1.6rem; margin: 0; }
+
+/* Flight result card */
+.flight-result-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  transition: border-color var(--duration) var(--ease);
+}
+
+.flight-result-card:hover { border-color: var(--border-hover); }
+
+.result-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  gap: 1rem;
+}
+
+/* Airline info */
+.airline-info { display: flex; align-items: center; gap: 10px; min-width: 140px; }
+
+.airline-logo-sm {
+  width: 36px; height: 36px;
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+  border: 1px solid var(--border);
+  padding: 3px;
+  background: var(--surface-2);
+}
+
+.airline-logo-fallback {
+  width: 36px; height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent);
+  font-weight: 800;
+  font-size: 0.65rem;
+}
+
+.airline-name { font-weight: 700; color: var(--text); font-size: 0.85rem; }
+.airline-code { color: var(--text-2); font-size: 0.72rem; font-weight: 600; }
+
+/* Time & Route */
+.flight-time { font-size: 1.1rem; font-weight: 800; color: var(--text); }
+.flight-airport { font-size: 0.72rem; color: var(--text-2); font-weight: 600; }
+.flight-duration { font-size: 0.72rem; color: var(--text-3); font-weight: 600; text-align: center; }
+
+.route-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  position: relative;
+  margin: 0 10px;
+}
+
+.route-line .stop-indicator {
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 7px; height: 7px;
+  background: var(--accent);
+  border-radius: 50%;
+}
+
+/* Price section */
+.price-section { text-align: right; min-width: 100px; }
+.price-main { font-size: 1.2rem; font-weight: 900; color: var(--accent); }
+.price-label { font-size: 0.7rem; color: var(--text-3); font-weight: 600; }
+
+.select-btn-top {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 6px 18px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-decoration: none;
+  letter-spacing: 0.05em;
+  transition: all var(--duration) var(--ease);
+}
+
+.select-btn-top:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  color: #fff;
+}
+
+/* Details toggle */
+.details-action {
+  padding: 0 1.25rem 0.75rem;
+}
+
+.view-details-link {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.view-details-link:hover { text-decoration: underline; }
+
+/* Itinerary details */
+.itinerary-details {
+  display: none;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.itinerary-details.show {
+  display: block;
+}
+
+/* Filter sidebar */
+.filter-sidebar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  position: sticky;
+  top: 80px;
+}
+
+.filter-section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.5rem;
+}
+
+/* Timeline */
+.timeline-container { position: relative; padding-left: 20px; }
+
+.timeline-container::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+
+.timeline-item { position: relative; margin-bottom: 1.5rem; }
+
+.timeline-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  position: absolute;
+  left: -20px;
+  top: 4px;
+  border: 2px solid var(--surface);
+}
+
+.timeline-info { padding-left: 4px; }
+
+.no-results-card {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.sort-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sort-bar .btn {
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  padding: 4px 12px;
+}
+
+.info-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+@media (max-width: 991.98px) {
+  .result-main { flex-wrap: wrap; }
+}
 </style>
 {% endblock %}
 
@@ -810,51 +275,53 @@
       {% for path in paths %}
       <div class="flight-result-card">
         <!-- Main Flight Summary (Horizontal Compact Layout) -->
-        <div class="flight-summary">
+        <div class="result-main">
           <!-- Airline Logo & Name -->
-          <div class="airline-section">
-            <div class="airline-logo">
-              {% if path.segments.0.airline.logo %}
-                <img src="{{ path.segments.0.airline.logo.url }}" alt="{{ path.segments.0.airline.code }}">
-              {% else %}
-                <span class="airline-logo-fallback">{{ path.segments.0.airline.code }}</span>
-              {% endif %}
+          <div class="airline-info">
+            {% if path.segments.0.airline.logo %}
+              <img src="{{ path.segments.0.airline.logo.url }}" alt="{{ path.segments.0.airline.code }}" class="airline-logo-sm">
+            {% else %}
+              <div class="airline-logo-fallback">{{ path.segments.0.airline.code }}</div>
+            {% endif %}
+            <div>
+              <div class="airline-name">{{ path.segments.0.airline.name }}</div>
+              <div class="airline-code">{{ path.segments.0.airline.code }}</div>
             </div>
-            <div class="airline-name">{{ path.segments.0.airline.code }}</div>
           </div>
 
           <!-- Departure -->
-          <div class="departure-section">
-            <div class="time-large">{{ path.segments.0.departure_time|time:"H:i" }}</div>
-            <div class="city-name">{{ path.segments.0.departure_airport.code }}</div>
+          <div class="text-center">
+            <div class="flight-time">{{ path.segments.0.departure_time|time:"H:i" }}</div>
+            <div class="flight-airport">{{ path.segments.0.departure_airport.code }}</div>
           </div>
 
-          <!-- Duration & Stops with Dashed Line -->
-          <div class="duration-section">
-            <div class="stops-info {% if path.total_stops == 0 %}non-stop{% elif path.total_stops > 0 %}connecting{% endif %}">
-              {% if path.total_stops == 0 %}
-                Non-stop
-              {% else %}
-                {{ path.total_stops }} stop{{ path.total_stops|pluralize }}
-              {% endif %}
+          <!-- Duration & Stops -->
+          <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center px-3" style="min-width: 120px;">
+            <div class="flight-duration">{{ path.total_duration }}</div>
+            <div class="w-100 d-flex align-items-center mt-1">
+              <div class="route-line"></div>
+              <div style="font-size:0.65rem; color:var(--accent); font-weight:700; white-space:nowrap; padding:0 6px;">
+                {% if path.total_stops == 0 %}Non-stop{% else %}{{ path.total_stops }} stop{{ path.total_stops|pluralize }}{% endif %}
+              </div>
+              <div class="route-line"></div>
             </div>
-            <div class="duration-time">{{ path.total_duration }}</div>
           </div>
 
           <!-- Arrival -->
-          <div class="arrival-section">
+          <div class="text-center">
             {% with last_seg=path.segments|last %}
-            <div class="time-large">{{ last_seg.arrival_time|time:"H:i" }}</div>
-            <div class="city-name">{{ last_seg.arrival_airport.code }}</div>
+            <div class="flight-time">{{ last_seg.arrival_time|time:"H:i" }}</div>
+            <div class="flight-airport">{{ last_seg.arrival_airport.code }}</div>
             {% endwith %}
           </div>
 
           <!-- Price & Select Button -->
           <div class="price-section">
             {% if fare_type == 'STUDENT' and path.discount_amount %}
-              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                <div style="font-size:0.75rem;color:#94a3b8;text-decoration:line-through;">&#8377;{{ path.original_price|floatformat:0 }}</div>
-                <div class="price-main">&#8377;{{ path.total_price|floatformat:0 }}<br><span style="font-size:0.7rem;color:#10b981;font-weight:800;"><i class="bi bi-percent"></i>10% off</span></div>
+              <div class="d-flex flex-column align-items-end" style="gap:2px;">
+                <div style="font-size:0.75rem;color:var(--text-3);text-decoration:line-through;">&#8377;{{ path.original_price|floatformat:0 }}</div>
+                <div class="price-main">&#8377;{{ path.total_price|floatformat:0 }}</div>
+                <div style="font-size:0.7rem;color:#10b981;font-weight:800;"><i class="bi bi-percent"></i>10% off</div>
               </div>
               <div class="price-label">/economy</div>
             {% else %}
@@ -875,44 +342,38 @@
 
         <!-- Detailed Itinerary -->
         <div class="itinerary-details">
-          <div class="small fw-800 text-uppercase letter-spacing-01 mb-3" style="letter-spacing:0.1em; color:#6b7280; font-weight:800;">Flight Details</div>
+          <div class="small fw-800 text-uppercase letter-spacing-01 mb-3" style="letter-spacing:0.1em; color:var(--text-2); font-weight:800;">Flight Details</div>
           <div class="timeline-container">
             {% for segment in path.segments %}
             <div class="timeline-item">
               <div class="timeline-dot"></div>
               {% if not forloop.last %}<div class="timeline-line"></div>{% endif %}
               
-              <div class="flight-detail-row">
-                <div class="flight-detail-cell">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="text-start">
                   <div class="fw-bold">{{ segment.departure_time|time:"H:i" }}</div>
                   <div class="small">{{ segment.departure_airport.city }} ({{ segment.departure_airport.code }})</div>
                 </div>
-                <div class="flight-detail-cell text-center">
+                <div class="text-center">
                   {% if segment.airline.logo %}
-                  <img src="{{ segment.airline.logo.url }}" alt="{{ segment.airline.name }}" class="details-airline-logo">
+                  <img src="{{ segment.airline.logo.url }}" alt="{{ segment.airline.name }}" class="airline-logo-sm" style="border:none;background:transparent;">
                   {% else %}
-                  <div class="details-airline-fallback">{{ segment.airline.code }}</div>
+                  <div class="airline-logo-fallback mx-auto">{{ segment.airline.code }}</div>
                   {% endif %}
-                  <div class="small fw-bold">{{ segment.airline.name }}</div>
-                  <div class="small text-muted">{{ segment.airline.code }}{{ segment.flight_number }}</div>
+                  <div class="small fw-bold mt-1">{{ segment.airline.name }}</div>
+                  <div class="small text-muted" style="font-size:0.7rem;">{{ segment.airline.code }}{{ segment.flight_number }}</div>
                 </div>
-                <div class="flight-detail-cell arrival">
+                <div class="text-end">
                   <div class="fw-bold">{{ segment.arrival_time|time:"H:i" }}</div>
                   <div class="small">{{ segment.arrival_airport.city }} ({{ segment.arrival_airport.code }})</div>
                 </div>
-                <div class="flight-policy-item">
-                  <i class="bi bi-bag-fill"></i>
-                  <span>
-                    <span class="flight-policy-label">Cabin</span>
-                    <span class="flight-policy-value">{{ segment.cabin_allowance }}</span>
-                  </span>
+              </div>
+              <div class="d-flex gap-4 mt-3 small text-muted p-2 rounded" style="background:var(--surface);">
+                <div>
+                  <i class="bi bi-bag-fill text-primary me-1"></i> Cabin: <span class="fw-bold" style="color:var(--text);">{{ segment.cabin_allowance }}</span>
                 </div>
-                <div class="flight-policy-item">
-                  <i class="bi bi-check2-square"></i>
-                  <span>
-                    <span class="flight-policy-label">Check In</span>
-                    <span class="flight-policy-value">{{ segment.check_in_allowance }}</span>
-                  </span>
+                <div>
+                  <i class="bi bi-check2-square text-success me-1"></i> Check In: <span class="fw-bold" style="color:var(--text);">{{ segment.check_in_allowance }}</span>
                 </div>
               </div>
 

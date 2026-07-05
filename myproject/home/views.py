@@ -346,10 +346,12 @@ def payment(request, booking_id):
     
     price_breakdown = {
         'per_passenger': booking.per_passenger_price,
-        'total': booking.total_price,
+        'base_fare': booking.base_fare,
+        'gst_amount': booking.gst_amount,
+        'total': booking.final_total,
         'passenger_count': booking.nums_passengers
     }
-    final_price = booking.total_price
+    final_price = booking.final_total
     discount = 0
     coupon_applied = None
 
@@ -360,7 +362,7 @@ def payment(request, booking_id):
                 # Check if this is the user's first booking (no other completed payments)
                 previous_payments = Payment.objects.filter(booking__user=request.user, status='COMPLETED').exists()
                 if not previous_payments:
-                    discount = booking.total_price
+                    discount = booking.final_total
                     final_price = 0
                     coupon_applied = 'UDAAAN'
                     messages.success(request, "Coupon applied! 100% discount for your first booking.")
@@ -386,7 +388,7 @@ def payment(request, booking_id):
 
             # Re-verify coupon if it was passed during final payment submission
             coupon_code = request.POST.get('coupon_code', '').strip().upper()
-            payment_amount = booking.total_price
+            payment_amount = booking.final_total
             
             if coupon_code == 'UDAAAN':
                 previous_payments = Payment.objects.filter(booking__user=request.user, status='COMPLETED').exists()
@@ -428,17 +430,16 @@ def booking_detail(request, reference):
     print(f"Booking Reference: {booking.reference}")
     print(f"Passengers Count: {passengers.count()}")
     print(f"Booking Passenger Count: {booking.nums_passengers}")
-    print(f"Total Price: {booking.total_price}")
+    print(f"Total Price: {booking.final_total}")
     
     price_breakdown = {
         'per_passenger': booking.per_passenger_price,
-        'total': booking.total_price,
+        'base_fare': booking.base_fare,
+        'gst_amount': booking.gst_amount,
+        'total': booking.final_total,
         'passenger_count': booking.nums_passengers
     }
     
-    if not payment:
-        messages.error(request, "Payment information not found")
-        return redirect('my_bookings')
     
     return render(request, 'booking_detail.html', {
     'booking': booking,

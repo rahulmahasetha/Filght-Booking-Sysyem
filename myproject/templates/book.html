@@ -1,240 +1,352 @@
 {% extends 'base.html' %}
-{% load flight_extras %}
+{% load custom_filters %}
 {% block title %}Book Flight{% endblock %}
 
 {% block styles %}
-.booking-hero {
-  background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%);
-  padding: 2.5rem 0 1.5rem;
-}
-.booking-hero h1 { color:#fff; font-weight:800; font-size:1.8rem; margin:0; }
-
-/* Progress steps */
-.booking-steps {
-  display:flex; align-items:center; justify-content:center;
-  gap:0; background:#fff; border-radius:16px; border:1px solid #e2e8f0;
-  padding:1.25rem 2rem; margin-bottom:2rem;
-}
-.step-item { display:flex; align-items:center; gap:10px; }
-.step-circle {
-  width:36px; height:36px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  font-weight:800; font-size:0.85rem;
-}
-.step-circle.active { background:linear-gradient(135deg,#2563eb,#7c3aed); color:#fff; }
-.step-circle.done { background:#dcfce7; color:#16a34a; }
-.step-circle.pending { background:#f1f5f9; color:#94a3b8; }
-.step-label { font-size:0.8rem; font-weight:700; color:#0f172a; }
-.step-label.pending { color:#94a3b8; }
-.step-connector { width:60px; height:2px; background:#e2e8f0; margin:0 8px; }
-
-/* Flight summary card */
-.flight-summary-card {
-  background:linear-gradient(135deg,#eff6ff,#f5f3ff);
-  border-radius:16px; border:1px solid #bfdbfe; padding:1.5rem;
-  margin-bottom:1.5rem;
-}
-.route-display { display:flex; align-items:center; gap:1rem; }
-.route-city { font-size:1.4rem; font-weight:900; color:#0f172a; }
-.route-airport { font-size:0.72rem; color:#94a3b8; font-weight:600; }
-.route-arrow-line {
-  flex:1; display:flex; align-items:center; gap:8px;
-  border-top:2px dashed #bfdbfe; position:relative; margin:0 1rem;
-}
-.route-plane { color:#2563eb; font-size:1.2rem; }
-.detail-chip {
-  display:inline-flex; align-items:center; gap:6px;
-  background:#fff; border-radius:99px; padding:5px 14px;
-  font-size:0.78rem; font-weight:600; color:#475569;
-  border:1px solid #e2e8f0; margin:3px;
-}
-.detail-chip i { color:#2563eb; }
-.booking-airline-strip {
-  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-  margin-bottom:1rem;
-}
-.booking-airline-item {
-  display:inline-flex; align-items:center; gap:10px;
-  background:#fff; border:1px solid #dbeafe; border-radius:12px;
-  padding:8px 12px; color:#0f172a; font-weight:800; font-size:0.82rem;
-  box-shadow:0 4px 14px rgba(37,99,235,0.08);
-}
-.booking-airline-logo,
-.booking-airline-fallback {
-  width:42px; height:42px; border-radius:10px; flex:0 0 42px;
-  border:1px solid #e2e8f0; background:#fff;
-}
-.booking-airline-logo {
-  object-fit:contain; padding:5px;
-}
-.booking-airline-fallback {
-  display:grid; place-items:center;
-  background:linear-gradient(135deg,#dbeafe,#fff);
-  color:#1d4ed8; font-weight:900; letter-spacing:0.04em;
-}
-.price-itinerary-logo,
-.price-itinerary-fallback {
-  width:24px; height:24px; border-radius:6px; flex:0 0 24px;
-  border:1px solid #e2e8f0; background:#fff;
-}
-.price-itinerary-logo {
-  object-fit:contain; padding:3px;
-}
-.price-itinerary-fallback {
-  display:grid; place-items:center; color:#1d4ed8; font-weight:900; font-size:0.55rem;
+<style>
+.book-hero {
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--border);
 }
 
-/* Passenger card */
-.passenger-section {
-  background:#fff; border-radius:16px; border:1px solid #e2e8f0;
-  overflow:hidden; margin-bottom:1.25rem;
-}
-.passenger-section-header {
-  background:#f8fafc; border-bottom:1px solid #f1f5f9;
-  padding:1rem 1.5rem;
-  display:flex; align-items:center; justify-content:space-between;
-}
-.passenger-number {
-  display:inline-flex; align-items:center; justify-content:center;
-  width:28px; height:28px; border-radius:50%;
-  background:linear-gradient(135deg,#2563eb,#7c3aed);
-  color:#fff; font-weight:800; font-size:0.75rem; margin-right:10px;
-}
-.passenger-section-body { padding:1.5rem; }
+.book-hero h1 { color: var(--text); font-weight: 800; font-size: 1.6rem; margin: 0; }
 
-/* Price summary */
-.price-summary-card {
-  background:#fff; border-radius:16px; border:1px solid #e2e8f0;
-  padding:1.5rem; position:sticky; top:80px;
-}
-.price-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f8fafc; }
-.price-row:last-child { border-bottom:none; }
-.price-total-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-top:2px solid #e2e8f0; margin-top:8px; }
-.price-total { font-size:1.5rem; font-weight:900; color:#2563eb; }
-
-.btn-continue {
-  width:100%; padding:15px;
-  background:linear-gradient(135deg,#2563eb,#7c3aed);
-  border:none; border-radius:12px;
-  color:#fff; font-weight:700; font-size:1rem;
-  box-shadow:0 4px 16px rgba(37,99,235,0.35);
-  transition:all 0.25s; cursor:pointer;
-}
-.btn-continue:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(37,99,235,0.45); }
-
-.btn-add-passenger {
-  width:100%; padding:12px;
-  background:#eff6ff; border:2px dashed #bfdbfe;
-  border-radius:12px; color:#2563eb;
-  font-weight:700; font-size:0.875rem;
-  transition:all 0.25s; cursor:pointer;
-}
-.btn-add-passenger:hover { background:#dbeafe; border-color:#93c5fd; }
-
-/* Dark Mode Overrides */
-[data-theme="dark"] .booking-steps,
-[data-theme="dark"] .passenger-section,
-[data-theme="dark"] .price-summary-card,
-[data-theme="dark"] .detail-chip {
-  background: #1e293b !important;
-  border-color: #334155 !important;
-  color: #f8fafc !important;
+.step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 0.75rem;
 }
 
-[data-theme="dark"] .step-label,
-[data-theme="dark"] .route-city,
-[data-theme="dark"] .booking-airline-item,
-[data-theme="dark"] .passenger-number,
-[data-theme="dark"] h6 {
-  color: #f8fafc !important;
+.step-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 0.7rem;
+  background: var(--surface-2);
+  color: var(--text-3);
+  border: 1px solid var(--border);
 }
 
-[data-theme="dark"] .fw-700,
-[data-theme="dark"] .fw-800,
-[data-theme="dark"] .fw-bold {
-  color: #f8fafc !important;
+.step-dot.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.step-dot.completed { background: var(--success); color: #fff; border-color: var(--success); }
+.step-line { flex: 1; height: 1px; background: var(--border); margin: 0 6px; }
+.step-label { font-size: 0.7rem; font-weight: 600; color: var(--text-3); margin-top: 4px; text-align: center; }
+.step-label.active { color: var(--accent); }
+
+/* Ticket overall */
+.ticket-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
 }
-[data-theme="dark"] .passenger-section-header {
-  background: #0f172a !important;
-  border-bottom-color: #334155 !important;
+
+.ticket-header {
+  background: var(--surface-2);
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-[data-theme="dark"] .step-label,
-[data-theme="dark"] .route-city,
-[data-theme="dark"] .price-summary-card h6,
-[data-theme="dark"] .passenger-section-header span {
-  color: #f8fafc !important;
+
+.ticket-ref {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 2px;
 }
-[data-theme="dark"] .flight-summary-card {
-  background: linear-gradient(135deg, #0f172a, #1e3a8a) !important;
-  border-color: #1e40af !important;
+
+.ticket-body {
+  padding: 1rem;
 }
-[data-theme="dark"] .booking-airline-item {
-  background:#0f172a !important;
-  border-color:#334155 !important;
-  color:#f8fafc !important;
+
+/* Airline Strip */
+.ticket-airline-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
 }
-[data-theme="dark"] .flight-summary-card .route-city {
-  color: #fff !important;
+
+.ticket-airline-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-2);
+  padding: 6px 12px;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text);
+  border: 1px solid var(--border);
 }
-[data-theme="dark"] .step-circle.pending {
-  background: #0f172a;
-  color: #475569;
+
+.ticket-airline-logo {
+  height: 20px;
+  width: auto;
 }
-[data-theme="dark"] .step-connector {
-  background: #334155 !important;
-}
-[data-theme="dark"] .btn-add-passenger {
-  background: rgba(37, 99, 235, 0.1);
-  border-color: #2563eb;
-  color: #60a5fa;
-}
-[data-theme="dark"] .price-row {
-  border-bottom-color: #334155 !important;
-}
-[data-theme="dark"] .price-total-row {
-  border-top-color: #334155 !important;
-}
-[data-theme="dark"] .price-total {
-  color: #60a5fa !important;
-}
-/* Professional Stop Visualization */
-.stop-line-bar {
-  height: 3px;
-  background: #e2e8f0;
+
+.ticket-airline-fallback {
+  background: var(--accent);
+  color: #fff;
+  padding: 2px 6px;
   border-radius: 4px;
-  width: 100%;
-  position: relative;
-  margin: 12px 0;
+  font-size: 0.7rem;
 }
+
+/* Route Display */
+.route-display {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  background: var(--surface-2);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.route-point {
+  flex: 1;
+}
+
+.route-point:last-child {
+  text-align: right;
+}
+
+.route-time {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.route-city {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.route-detail {
+  font-size: 0.75rem;
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+/* Stop line */
+.route-center {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 0 1rem;
+}
+
+.stop-line-bar {
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+  position: relative;
+  margin-bottom: 10px;
+}
+
 .stop-line-active {
   position: absolute;
+  top: 0; left: 0;
   height: 100%;
-  background: #ef4444;
-  border-radius: 4px;
-  left: 0;
-  right: 0;
+  background: var(--primary);
+  width: 100%;
 }
+
 .stop-dot {
   position: absolute;
+  top: -4px;
   width: 10px;
   height: 10px;
-  background: #fff;
-  border: 2.5px solid #ef4444;
+  background: var(--surface);
+  border: 2px solid var(--primary);
   border-radius: 50%;
-  top: -3.5px;
-  z-index: 2;
-  box-shadow: 0 0 0 4px #fff;
+  transform: translateX(-50%);
 }
+
 .stop-label {
   position: absolute;
-  top: -18px;
+  top: 14px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.6rem;
-  font-weight: 800;
-  color: #475569;
-  white-space: nowrap;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-3);
+  text-transform: uppercase;
 }
+
+.route-stop {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: rgba(37,99,235,0.1);
+  padding: 2px 10px;
+  border-radius: 20px;
+}
+
+/* Info Grid */
+.info-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  background: var(--surface-2);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  margin-bottom: 0.75rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.info-value {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+/* Timeline */
+.timeline-container {
+  border-left: 2px dashed var(--border);
+  padding-left: 1.5rem;
+  margin-left: 1rem;
+  position: relative;
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: 1rem;
+}
+
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -29px;
+  top: 4px;
+  width: 10px;
+  height: 10px;
+  background: var(--primary);
+  border-radius: 50%;
+}
+
+.timeline-content {
+  background: var(--surface-2);
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+}
+
+.btn-add-passenger {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--duration) var(--ease);
+}
+
+.btn-add-passenger:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* Payment Horizontal Summary for sidebar */
+.payment-summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.payment-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.payment-row:last-child { border-bottom: none; }
+
+.payment-label {
+  font-size: 0.75rem;
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+.payment-value {
+  font-size: 0.8rem;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.payment-total-block {
+  background: var(--surface-2);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+.payment-total-label {
+  font-weight: 800;
+  color: var(--text);
+}
+.payment-total-amount {
+  font-weight: 900;
+  font-size: 1.25rem;
+  color: var(--primary);
+}
+
+.btn-continue {
+  width: 100%;
+  padding: 12px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--duration) var(--ease);
+}
+
+.btn-continue:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+</style>
 {% endblock %}
 
 {% block body %}
@@ -273,65 +385,83 @@
   <div class="row g-4">
     <div class="col-lg-8">
       <!-- Flight Summary -->
-      <div class="flight-summary-card">
-        <div class="booking-airline-strip">
-          {% for f in flights %}
-          <div class="booking-airline-item" title="{{ f.airline.name }}">
-            {% if f.airline.logo %}
-            <img src="{{ f.airline.logo.url }}" alt="{{ f.airline.name }}" class="booking-airline-logo">
-            {% else %}
-            <span class="booking-airline-fallback">{{ f.airline.code }}</span>
-            {% endif %}
-            <span>{{ f.airline.name }}</span>
+      <div class="ticket-card mb-4">
+        <div class="ticket-header">
+          <div class="ticket-airline-strip mb-0">
+            {% for f in flights %}
+            <div class="ticket-airline-item" title="{{ f.airline.name }}">
+              {% if f.airline.logo %}
+              <img src="{{ f.airline.logo.url }}" alt="{{ f.airline.name }}" class="ticket-airline-logo">
+              {% else %}
+              <span class="ticket-airline-fallback">{{ f.airline.code }}</span>
+              {% endif %}
+              <span>{{ f.airline.name }}</span>
+              <span class="text-muted" style="font-size:0.65rem;">{{ f.airline.code }}{{ f.flight_number }}</span>
+            </div>
+            {% endfor %}
           </div>
-          {% endfor %}
         </div>
-        <div class="route-display mb-3">
-          <div class="text-center">
-            <div class="route-city">{{ flights.0.departure_airport.city }}</div>
-            <div class="route-airport">{{ flights.0.departure_airport.code }}</div>
-          </div>
-          <div style="flex:1; text-align:center; padding:0 1rem;">
+        <div class="ticket-body" style="padding-bottom:0;">
+          <div class="route-display mb-3">
+            <div class="route-point text-start">
+              <div class="route-time">{{ flights.0.departure_time|time:"H:i" }}</div>
+              <div class="route-city">{{ flights.0.departure_airport.city }}</div>
+              <div class="route-detail">{{ flights.0.departure_airport.code }} &middot; {{ flights.0.departure_airport.name }}</div>
+              <div class="route-detail mt-1">{{ flights.0.departure_time|date:"M d, Y" }}</div>
+            </div>
+            <div class="route-center">
+              <div class="stop-line-bar">
+                  <div class="stop-line-active"></div>
+                  {% if flights|length > 1 %}
+                    {% with total_segs=flights|length %}
+                    {% for f in flights %}
+                      {% if not forloop.last %}
+                        <div class="stop-dot" style="left: {{ forloop.counter|mul:100|div:total_segs }}%;">
+                          <span class="stop-label">{{ f.arrival_airport.code }}</span>
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                    {% endwith %}
+                  {% endif %}
+              </div>
+              <div class="route-stop mt-2">
+                  {% if flights|length == 1 and flights.0.stops == 0 %}Non-stop{% else %}
+                      {{ flights|length|add:"-1"|add:flights.0.stops }} Stop{% if flights|length > 1 or flights.0.stops > 0 %}s{% endif %}
+                  {% endif %}
+              </div>
+            </div>
             {% with last_seg=flights|last %}
-            <div class="stop-line-bar">
-                <div class="stop-line-active"></div>
-                {% if flights|length > 1 %}
-                  {% with total_segs=flights|length %}
-                  {% for f in flights %}
-                    {% if not forloop.last %}
-                      <div class="stop-dot" style="left: {{ forloop.counter|mul:100|div:total_segs }}%;">
-                        <span class="stop-label">{{ f.arrival_airport.code }}</span>
-                      </div>
-                    {% endif %}
-                  {% endfor %}
-                  {% endwith %}
-                {% endif %}
+            <div class="route-point text-end">
+              <div class="route-time">{{ last_seg.arrival_time|time:"H:i" }}</div>
+              <div class="route-city">{{ last_seg.arrival_airport.city }}</div>
+              <div class="route-detail">{{ last_seg.arrival_airport.code }} &middot; {{ last_seg.arrival_airport.name }}</div>
+              <div class="route-detail mt-1">{{ last_seg.arrival_time|date:"M d, Y" }}</div>
             </div>
-            <div style="font-size:0.7rem;color:#16a34a;font-weight:700;">
-                {% if flights|length == 1 and flights.0.stops == 0 %}Non-stop{% else %}
-                    {{ flights|length|add:"-1"|add:flights.0.stops }} Stop{% if flights|length > 1 or flights.0.stops > 0 %}s{% endif %}
-                {% endif %}
-            </div>
-          </div>
-          <div class="text-center">
-            <div class="route-city">{{ last_seg.arrival_airport.city }}</div>
-            <div class="route-airport">{{ last_seg.arrival_airport.code }}</div>
             {% endwith %}
           </div>
-        </div>
-        <div class="d-flex flex-wrap">
-          {% for f in flights %}
-          <span class="detail-chip" title="{{ f.departure_airport.code }} to {{ f.arrival_airport.code }}">
-            {% if f.airline.logo %}
-            <img src="{{ f.airline.logo.url }}" alt="{{ f.airline.name }}" class="booking-airline-logo" style="width:22px;height:22px;border-radius:6px;padding:2px;">
-            {% else %}
-            <span class="booking-airline-fallback" style="width:22px;height:22px;border-radius:6px;font-size:0.55rem;">{{ f.airline.code }}</span>
-            {% endif %}
-            {{ f.airline.code }}{{ f.flight_number }}
-          </span>
-          {% endfor %}
-          <span class="detail-chip"><i class="bi bi-calendar3"></i>{{ flights.0.departure_time|date:"M d, Y" }}</span>
-          <span class="detail-chip"><i class="bi bi-star"></i>{{ travel_class }}</span>
+          
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Journey</span>
+              <span class="info-value">{% if flights|length == 1 %}Direct{% else %}Connecting{% endif %}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Stops</span>
+              <span class="info-value">
+                  {% if flights|length == 1 and flights.0.stops == 0 %}0 Stop(s){% else %}
+                      {{ flights|length|add:"-1"|add:flights.0.stops }} Stop(s)
+                  {% endif %}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Class</span>
+              <span class="info-value">{{ travel_class }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Passengers</span>
+              <span class="info-value">{{ passengers|length }}</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -340,19 +470,14 @@
         {% csrf_token %}
         <div id="passengersContainer">
           {% for passenger_num in passengers %}
-          <div class="passenger-section passenger-card" id="passenger-{{ passenger_num }}">
-            <div class="passenger-section-header">
+          <div class="ticket-card passenger-card" id="passenger-{{ passenger_num }}">
+            <div class="ticket-header">
               <div class="d-flex align-items-center">
-                <span class="passenger-number">{{ passenger_num }}</span>
-                <span class="fw-700" style="font-weight:700;color:#0f172a;">Passenger {{ passenger_num }}</span>
+                <i class="bi bi-person-fill me-2" style="color:var(--primary); font-size:1.1rem;"></i>
+                <span class="fw-800" style="font-weight:800;color:var(--text);font-size:0.95rem;">Passenger {{ passenger_num }}</span>
               </div>
-              {% if not forloop.first %}
-              <button type="button" class="btn btn-sm btn-outline-danger rounded-pill remove-passenger" data-passenger="{{ passenger_num }}">
-                <i class="bi bi-trash me-1"></i>Remove
-              </button>
-              {% endif %}
             </div>
-            <div class="passenger-section-body">
+            <div class="ticket-body">
               <div class="row g-3">
                 <div class="col-md-4">
                   <label class="form-label">Type <span class="text-danger">*</span></label>
@@ -423,9 +548,7 @@
           {% endfor %}
         </div>
 
-        <button type="button" class="btn-add-passenger mb-3" id="addPassengerBtn">
-          <i class="bi bi-plus-circle me-2"></i>Add Another Passenger
-        </button>
+        <!-- Add Passenger Button Removed -->
 
         <input type="hidden" name="travel_class" value="{{ travel_class }}">
         <input type="hidden" name="fare_type" value="{{ fare_type }}">
@@ -436,45 +559,58 @@
 
     <!-- Price Summary -->
     <div class="col-lg-4">
-      <div class="price-summary-card">
-        <div class="mb-3">
-          <h6 class="fw-800 mb-1" style="font-weight:800;color:#0f172a;">Itinerary</h6>
-          {% for f in flights %}
-          <div class="small text-muted d-flex justify-content-between align-items-center gap-2 mb-2">
-            <span class="d-flex align-items-center gap-2">
-              {% if f.airline.logo %}
-              <img src="{{ f.airline.logo.url }}" alt="{{ f.airline.name }}" class="price-itinerary-logo">
-              {% else %}
-              <span class="price-itinerary-fallback">{{ f.airline.code }}</span>
-              {% endif %}
-              {{ f.departure_airport.code }} &rarr; {{ f.arrival_airport.code }}
-            </span>
-            <span>{{ f.airline.code }}{{ f.flight_number }}</span>
+      <div class="ticket-card" style="position: sticky; top: 80px;">
+        <div class="ticket-header">
+          <div class="fw-800" style="font-weight:800;color:var(--text);"><i class="bi bi-receipt me-2" style="color:var(--primary);"></i>Booking Summary</div>
+        </div>
+        <div class="ticket-body">
+          <div class="mb-3 pb-3" style="border-bottom:1px solid var(--border);">
+            <div style="font-size:0.72rem; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Itinerary</div>
+            {% for f in flights %}
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="d-flex align-items-center gap-2" style="font-size:0.8rem; font-weight:700; color:var(--text);">
+                {% if f.airline.logo %}
+                <img src="{{ f.airline.logo.url }}" alt="{{ f.airline.name }}" class="price-itinerary-logo" style="width:20px;height:auto;border-radius:4px;">
+                {% else %}
+                <span class="price-itinerary-fallback" style="padding:2px 4px;">{{ f.airline.code }}</span>
+                {% endif %}
+                {{ f.departure_airport.code }} &rarr; {{ f.arrival_airport.code }}
+              </div>
+              <div class="text-muted" style="font-size:0.75rem;">{{ f.airline.code }}{{ f.flight_number }}</div>
+            </div>
+            {% endfor %}
           </div>
-          {% endfor %}
-        </div>
-        
-        <h6 class="fw-800 mb-3" style="font-weight:800;color:#0f172a;">Price Summary</h6>
-        <div id="priceBreakdown">
-          <!-- Populated by JS -->
-        </div>
-        <div id="studentPriceSection" style="display: {% if fare_type == 'STUDENT' %}block{% else %}none{% endif %}; margin-top:8px;">
-          <div class="price-row">
-            <span class="text-muted">Original Total</span>
-            <span class="fw-semibold" id="originalTotal">₹{{ original_total_price|floatformat:2 }}</span>
+          
+          <div style="font-size:0.72rem; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Fare Summary</div>
+          <div id="priceBreakdown">
+            <!-- Populated by JS -->
           </div>
-          <div class="price-row discount">
-            <span class="text-muted" style="color: #16a34a; font-weight: 700;"><i class="bi bi-percent"></i> Student Discount (10%)</span>
-            <span class="fw-semibold" id="calculatedDiscount" style="color: #16a34a; font-weight: 700;">−₹{{ discount_amount|floatformat:2 }}</span>
+          <div id="studentPriceSection" style="display: {% if fare_type == 'STUDENT' %}block{% else %}none{% endif %}; margin-top:8px;">
+            <div class="payment-row">
+              <span class="payment-label">Original Total</span>
+              <span class="payment-value" id="originalTotal">₹{{ original_total_price|floatformat:2 }}</span>
+            </div>
+            <div class="payment-row discount">
+              <span class="payment-label" style="color: #16a34a;"><i class="bi bi-percent"></i> Student Discount (10%)</span>
+              <span class="payment-value" id="calculatedDiscount" style="color: #16a34a;">−₹{{ discount_amount|floatformat:2 }}</span>
+            </div>
           </div>
+          <div class="payment-row mt-2" style="border-top:1px solid var(--border); padding-top:8px;">
+            <span class="payment-label">Base Fare</span>
+            <span class="payment-value" id="displayBaseFare">₹{{ total_price|floatformat:2 }}</span>
+          </div>
+          <div class="payment-row">
+            <span class="payment-label">GST (18%)</span>
+            <span class="payment-value" id="displayGst">₹0.00</span>
+          </div>
+          <div class="payment-total-block">
+            <span class="payment-total-label">Total Amount</span>
+            <span class="payment-total-amount">&#8377;<span id="displayTotalPrice">{{ total_price|floatformat:2 }}</span></span>
+          </div>
+          <button type="submit" form="passengerForm" class="btn-continue mt-3">
+            <i class="bi bi-arrow-right me-2"></i>Continue to Payment
+          </button>
         </div>
-        <div class="price-total-row">
-          <span class="fw-700" style="font-weight:700;">Total</span>
-          <span class="price-total">&#8377;<span id="displayTotalPrice">{{ total_price|floatformat:2 }}</span></span>
-        </div>
-        <button type="submit" form="passengerForm" class="btn-continue mt-3">
-          <i class="bi bi-arrow-right me-2"></i>Continue to Payment
-        </button>
       </div>
     </div>
   </div>
@@ -483,7 +619,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const container = document.getElementById('passengersContainer');
-  const addBtn = document.getElementById('addPassengerBtn');
+
   const totalInput = document.getElementById('totalPassengers');
   const displayTotal = document.getElementById('displayTotalPrice');
   const priceBreakdown = document.getElementById('priceBreakdown');
@@ -506,26 +642,32 @@ document.addEventListener('DOMContentLoaded', function() {
       
       total += paxPrice;
       html += `
-        <div class="price-row">
-          <span class="small text-muted">Pax ${index + 1} (${type}${type === 'CHILD' ? ' - ' + age + 'y' : ''})</span>
-          <span class="fw-semibold">&#8377;${paxPrice.toFixed(2)}</span>
+        <div class="payment-row">
+          <span class="payment-label">Pax ${index + 1} (${type}${type === 'CHILD' ? ' - ' + age + 'y' : ''})</span>
+          <span class="payment-value">&#8377;${paxPrice.toFixed(2)}</span>
         </div>
       `;
     });
     
     priceBreakdown.innerHTML = html;
     // Apply student discount if applicable
+    let baseFare = total;
     if (fareType === 'STUDENT' && total > 0) {
       const discount = Math.round((total * 0.10) * 100) / 100;
-      const finalTotal = Math.round((total - discount) * 100) / 100;
+      baseFare = Math.round((total - discount) * 100) / 100;
       document.getElementById('originalTotal').textContent = '₹' + total.toFixed(2);
       document.getElementById('calculatedDiscount').textContent = '−₹' + discount.toFixed(2);
-      document.getElementById('displayTotalPrice').textContent = finalTotal.toFixed(2);
       const sec = document.getElementById('studentPriceSection'); if (sec) sec.style.display = 'block';
     } else {
-      document.getElementById('displayTotalPrice').textContent = total.toFixed(2);
       const sec = document.getElementById('studentPriceSection'); if (sec) sec.style.display = 'none';
     }
+    
+    const gstAmount = Math.round((baseFare * 0.18) * 100) / 100;
+    const finalTotal = Math.round((baseFare + gstAmount) * 100) / 100;
+    
+    document.getElementById('displayBaseFare').textContent = '₹' + baseFare.toFixed(2);
+    document.getElementById('displayGst').textContent = '₹' + gstAmount.toFixed(2);
+    document.getElementById('displayTotalPrice').textContent = finalTotal.toFixed(2);
     totalInput.value = passengers.length;
   }
 
@@ -559,7 +701,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="passenger-section-header">
         <div class="d-flex align-items-center">
           <span class="passenger-number">${nextNum}</span>
-          <span style="font-weight:700;color:#0f172a;">Passenger ${nextNum}</span>
+          <span style="font-weight:700;color:var(--text);">Passenger ${nextNum}</span>
         </div>
         <button type="button" class="btn btn-sm btn-outline-danger rounded-pill remove-passenger">
           <i class="bi bi-trash me-1"></i>Remove

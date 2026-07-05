@@ -177,11 +177,11 @@ def book_flight(request, flight_id):
     travel_class = request.GET.get('class', 'ECONOMY')
     
     if travel_class == 'ECONOMY':
-        price = flight.economy_price
+        price = flight.current_economy_price
     elif travel_class == 'BUSINESS':
-        price = flight.business_price
+        price = flight.current_business_price
     elif travel_class == 'FIRST':
-        price = flight.first_class_price
+        price = flight.current_first_class_price
     
     total_price = price * passengers
     

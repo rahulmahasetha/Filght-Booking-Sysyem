@@ -2,99 +2,95 @@
 {% block title %}My Bookings{% endblock %}
 
 {% block styles %}
+<style>
 .page-header {
-background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%);
-padding: 1.5rem 0 1.25rem;
-margin-bottom: 1.5rem;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
 }
-.page-header h1 { color: #fff; font-weight: 800; font-size: 1.8rem; margin: 0; }
-.page-header p { color: rgba(255,255,255,0.65); font-size: 0.9rem; margin: 4px 0 0; }
+
+.page-header h1 { color: var(--text); font-weight: 800; font-size: 1.6rem; margin: 0; }
+.page-header p { color: var(--text-2); font-size: 0.85rem; margin: 4px 0 0; }
 
 .booking-card {
-background: #fff;
-border-radius: 16px;
-border: 1.5px solid #e2e8f0;
-margin-bottom: 1rem;
-transition: all 0.25s;
-overflow: hidden;
-box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin-bottom: 0.75rem;
+  transition: all var(--duration) var(--ease);
+  overflow: hidden;
 }
-.booking-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.08); transform: translateY(-2px); }
-.booking-card-header {
-background: #f1f5f9;
-border-bottom: 1px solid #e2e8f0;
-padding: 0.85rem 1.5rem;
-display: flex; align-items: center; justify-content: space-between;
-}
-.booking-ref { font-family: monospace; font-size: 0.8rem; color: #475569; font-weight: 700; }
-.booking-card-body { padding: 1.25rem 1.5rem; }
-.airline-logo { height: 36px; max-width: 80px; object-fit: contain; }
-.airline-placeholder {
-width: 40px; height: 40px;
-background: linear-gradient(135deg, #2563eb, #7c3aed);
-border-radius: 10px;
-display: flex; align-items: center; justify-content: center;
-color: #fff; font-weight: 800; font-size: 0.75rem;
-}
-.route-text { font-size: 1.1rem; font-weight: 700; color: #0f172a; }
-.route-sub { font-size: 0.78rem; color: #475569; font-weight: 600; }
-.route-arrow { color: #2563eb; }
-.price-tag { font-size: 1.2rem; font-weight: 800; color: #2563eb; }
 
-.status-CONFIRMED { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-.status-CANCELLED { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
-.status-PENDING { background: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
+.booking-card:hover { border-color: var(--border-hover); transform: translateY(-1px); }
+
+.booking-card-header {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.booking-ref { font-family: monospace; font-size: 0.78rem; color: var(--text-2); font-weight: 700; }
+.booking-card-body { padding: 1rem 1.25rem; }
+
+.airline-logo { height: 32px; max-width: 72px; object-fit: contain; }
+
+.airline-placeholder {
+  width: 36px; height: 36px;
+  background: var(--accent);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 800; font-size: 0.7rem;
+}
+
+.route-text { font-size: 1rem; font-weight: 700; color: var(--text); }
+.route-sub { font-size: 0.75rem; color: var(--text-2); font-weight: 600; }
+.route-arrow { color: var(--accent); }
+.price-tag { font-size: 1.1rem; font-weight: 800; color: var(--accent); }
+
+.status-CONFIRMED { background: var(--success-soft); color: var(--success); border: 1px solid rgba(34,197,94,0.2); }
+.status-CANCELLED { background: var(--danger-soft); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
+.status-PENDING { background: var(--warning-soft); color: var(--warning); border: 1px solid rgba(245,158,11,0.2); }
 
 .empty-state {
-text-align: center; padding: 5rem 2rem;
-background: #fff; border-radius: 16px; border: 1.5px solid #e2e8f0;
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
 }
+
 .empty-icon {
-width: 90px; height: 90px;
-background: #eff6ff; border-radius: 50%;
-display: flex; align-items: center; justify-content: center;
-font-size: 2.5rem; margin: 0 auto 1.5rem;
-color: #2563eb;
+  width: 80px; height: 80px;
+  background: var(--accent-soft);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 1.25rem;
+  color: var(--accent);
 }
 
 .filter-bar {
-background: #fff; border-radius: 14px;
-border: 1.5px solid #e2e8f0; padding: 1rem 1.5rem;
-margin-bottom: 1.5rem;
-display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
-box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 0.85rem 1.25rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
-.filter-bar .btn { border-radius: 99px; font-size: 0.8rem; padding: 5px 16px; font-weight: 600; }
 
-/* Dark Mode Overrides */
-[data-theme="dark"] .filter-bar,
-[data-theme="dark"] .booking-card-header,
-[data-theme="dark"] .empty-state {
-background: #1e293b !important;
-border-color: #334155 !important;
-color: #f8fafc !important;
+.filter-bar .btn {
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  padding: 5px 14px;
+  font-weight: 600;
 }
-[data-theme="dark"] .route-text,
-[data-theme="dark"] .text-dark {
-color: #f8fafc !important;
-}
-[data-theme="dark"] .booking-ref {
-color: #94a3b8 !important;
-}
-[data-theme="dark"] .status-CONFIRMED {
-background: rgba(21, 128, 61, 0.2);
-color: #4ade80;
-border: 1px solid rgba(74, 222, 128, 0.3);
-}
-[data-theme="dark"] .status-CANCELLED {
-background: rgba(185, 28, 28, 0.2);
-color: #f87171;
-border: 1px solid rgba(248, 113, 113, 0.3);
-}
-[data-theme="dark"] .empty-icon {
-background: #0f172a;
-color: #60a5fa;
-}
+</style>
 {% endblock %}
 
 {% block body %}

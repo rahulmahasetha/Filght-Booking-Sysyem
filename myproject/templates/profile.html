@@ -1,226 +1,280 @@
 {% extends 'base.html' %}
 {% load static %}
-
-{% block title %}My Dashboard{% endblock %}
+{% block title %}Profile{% endblock %}
 
 {% block styles %}
-
-.view-all-link {
-  font-size:0.82rem; font-weight:700; color:#2563eb; text-decoration:none;
+<style>
+.profile-hero {
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--border);
 }
-.view-all-link:hover { text-decoration:underline; }
 
-/* Stats grid */
-.dash-stat {
-background:#fff; border-radius:16px; border:1.5px solid #e2e8f0;
-padding:1rem; transition:all 0.25s; position:relative; overflow:hidden;
-box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-}
-.dash-stat:hover { box-shadow:0 12px 36px rgba(0,0,0,0.08); transform:translateY(-3px); border-color:#bfdbfe; }
-.dash-stat-icon {
-width:36px; height:36px; border-radius:10px;
-display:flex; align-items:center; justify-content:center;
-font-size:1rem; margin-bottom:0.75rem;
-}
-.dash-stat-icon.blue { background:#eff6ff; color:#2563eb; }
-.dash-stat-icon.green { background:#f0fdf4; color:#16a34a; }
-.dash-stat-icon.red { background:#fef2f2; color:#ef4444; }
-.dash-stat-icon.amber { background:#fffbeb; color:#d97706; }
-.dash-stat-value { font-size:1.4rem; font-weight:900; color:#0f172a; line-height:1; }
-.dash-stat-label { font-size:0.65rem; color:#64748b; font-weight:700; margin-top:4px; letter-spacing:0.03em;
-text-transform: uppercase; }
+.profile-hero h1 { color: var(--text); font-weight: 800; font-size: 1.6rem; margin: 0; }
 
-/* Profile sidebar card */
+.profile-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
 .profile-sidebar {
-background:#fff; border-radius:20px; border:1.5px solid #e2e8f0;
-overflow:hidden; box-shadow:0 8px 30px rgba(0,0,0,0.06);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 1.5rem;
 }
-.profile-cover {
-background:linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
-padding:2.5rem 1.5rem 3.5rem; text-align:center; position:relative;
-}
-.profile-avatar-wrap {
-position:relative; display:inline-block;
-margin-bottom:1rem;
-}
-.profile-avatar {
-width:120px; height:120px; border-radius:50%;
-border:4px solid rgba(255,255,255,0.3);
-object-fit:cover; background:#fff;
-}
-.avatar-edit-btn {
-position:absolute; bottom:4px; right:4px;
-width:36px; height:36px; border-radius:50%;
-background:#fff; border:2px solid #2563eb;
-display:flex; align-items:center; justify-content:center;
-color:#2563eb; font-size:0.85rem; cursor:pointer;
-transition:all 0.2s; box-shadow:0 2px 8px rgba(0,0,0,0.15);
-}
-.avatar-edit-btn:hover { background:#2563eb; color:#fff; }
-.profile-name { color:#fff; font-weight:800; font-size:1.3rem; margin:0; }
-.profile-username { color:rgba(255,255,255,0.6); font-size:0.82rem; }
 
-.profile-body { padding:1.5rem; }
+.profile-cover {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  padding: 2rem 1.5rem;
+  text-align: center;
+  position: relative;
+}
+
+.profile-avatar-wrap {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 1rem;
+}
+
+.profile-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid var(--surface);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.avatar-edit-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: all var(--duration) var(--ease);
+}
+
+.avatar-edit-btn:hover {
+  background: var(--surface-2);
+  transform: scale(1.05);
+}
+
+.profile-name {
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.25rem;
+  margin-bottom: 2px;
+}
+
+.profile-username {
+  color: rgba(255,255,255,0.8);
+  font-size: 0.85rem;
+}
+
+.profile-body {
+  padding: 1.5rem;
+}
+
 .profile-info-row {
-display:flex; align-items:center; gap:12px;
-padding:12px 0; border-bottom:1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 1.25rem;
 }
-.profile-info-row:last-child { border-bottom:none; }
+
+.profile-info-row:last-child {
+  margin-bottom: 0;
+}
+
 .profile-info-icon {
-width:34px; height:34px; border-radius:10px;
-display:flex; align-items:center; justify-content:center;
-font-size:0.85rem; flex-shrink:0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
 }
-.profile-info-label { font-size:0.72rem; color:#64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px;
-}
-.profile-info-value { font-size:0.85rem; font-weight:700; color:#0f172a; }
 
 .btn-edit-profile {
-width:100%; padding:12px;
-background:linear-gradient(135deg, #2563eb, #7c3aed);
-border:none; border-radius:12px;
-color:#fff; font-weight:700; font-size:0.875rem;
-box-shadow:0 4px 16px rgba(37,99,235,0.3);
-transition:all 0.25s; cursor:pointer;
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 700;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  transition: all var(--duration) var(--ease);
 }
-.btn-edit-profile:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(37,99,235,0.4); }
+
+.btn-edit-profile:hover {
+  background: var(--border);
+}
 
 /* Loyalty card */
 .loyalty-card {
-background:#fffbeb;
-border-radius:16px; border:1.5px solid #fde68a;
-padding:1.5rem; margin-top:1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
 }
-.loyalty-title { font-weight:800; color:#92400e; font-size:0.95rem; margin-bottom:0.75rem; }
+
+.loyalty-title {
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+}
+
 .loyalty-progress {
-height:8px; background:#fde68a; border-radius:99px; overflow:hidden;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
 }
+
 .loyalty-progress-bar {
-height:100%; background:linear-gradient(90deg, #f59e0b, #d97706);
-border-radius:99px; transition:width 0.6s;
-}
-.loyalty-info { display:flex; justify-content:space-between; margin-top:6px; }
-.loyalty-info span { font-size:0.72rem; font-weight:700; color:#92400e; }
-
-/* Booking card */
-.recent-booking {
-background:#fff; border-radius:14px; border:1.5px solid #e2e8f0;
-padding:1.25rem; margin-bottom:0.75rem;
-transition:all 0.25s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-}
-.recent-booking:hover { box-shadow:0 8px 24px rgba(0,0,0,0.08); border-color:#bfdbfe; transform:translateY(-2px); }
-.rb-airline-logo { width:44px; height:44px; border-radius:10px; border:1px solid #f1f5f9; object-fit:contain;
-background:#fff; padding:5px; }
-.rb-airline-placeholder {
-width:44px; height:44px; border-radius:10px;
-background:linear-gradient(135deg,#dbeafe,#fff);
-display:flex; align-items:center; justify-content:center;
-color:#1d4ed8; font-weight:900; font-size:0.65rem; flex-shrink:0;
-border:1px solid #e2e8f0;
-}
-.rb-route { font-weight:700; color:#0f172a; font-size:0.95rem; }
-.rb-detail { font-size:0.75rem; color:#475569; font-weight: 600; }
-.rb-price { font-weight:800; color:#2563eb; font-size:1.1rem; }
-.status-badge { font-size:0.7rem; font-weight:700; padding:4px 10px; border-radius:99px; }
-.status-CONFIRMED { background:#dcfce7; color:#15803d; border: 1px solid #bbf7d0; }
-.status-CANCELLED { background:#fee2e2; color:#b91c1c; border: 1px solid #fecaca; }
-.status-PENDING { background:#fef9c3; color:#854d0e; border: 1px solid #fef08a; }
-
-/* Empty state */
-.empty-bookings {
-text-align:center; padding:3rem 1.5rem;
-background:#fff; border-radius:16px; border:1.5px solid #e2e8f0;
-}
-.empty-icon {
-width:70px; height:70px; border-radius:50%;
-background:#eff6ff; display:flex; align-items:center; justify-content:center;
-font-size:2rem; color:#2563eb; margin:0 auto 1rem;
+  height: 100%;
+  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+  border-radius: 4px;
 }
 
-/* Section header */
-.section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; }
-.section-head h5 { font-weight:800; color:#0f172a; margin:0; }
+.loyalty-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+/* Recent Bookings */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-CONFIRMED {
+  background: rgba(22, 163, 74, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.status-CANCELLED {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
 
 .btn-view-booking {
-  display:inline-flex; align-items:center; gap:6px;
-  padding:8px 18px; border-radius:10px; border:1.5px solid #e2e8f0;
-  color:#475569; font-weight:700; font-size:0.78rem;
-  text-decoration:none; transition:all 0.2s; white-space:nowrap;
-  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--primary);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all var(--duration) var(--ease);
 }
-.btn-view-booking:hover { border-color:#2563eb; color:#2563eb; background:#f8fafc; }
 
-/* Modal styling */
-.modal-custom .modal-content { border:none; border-radius:20px; overflow:hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
-.modal-custom .modal-header {
-background:linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
-border:none; padding:1.25rem 1.5rem;
+.btn-view-booking:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
 }
-.modal-custom .modal-title { color:#fff; font-weight:800; }
-.modal-custom .modal-body { padding:1.75rem; }
-.modal-custom .modal-footer { border:none; background:#f1f5f9; padding:1rem 1.5rem; }
-.modal-section-label {
-font-size:0.7rem; text-transform:uppercase; letter-spacing:0.07em;
-color:#94a3b8; font-weight:700; margin-bottom:0.75rem;
-display:flex; align-items:center; gap:8px;
-}
-.modal-section-label::after { content:''; flex:1; height:1px; background:#e2e8f0; }
 
-/* Dark Mode Overrides */
-[data-theme="dark"] .dash-stat,
-[data-theme="dark"] .profile-sidebar,
-[data-theme="dark"] .recent-booking,
-[data-theme="dark"] .empty-bookings,
-[data-theme="dark"] .modal-custom .modal-content {
-background: #1e293b !important;
-border-color: #334155 !important;
-color: #f8fafc !important;
+.profile-avatar-lg {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--border);
 }
-[data-theme="dark"] .dash-stat-value,
-[data-theme="dark"] .profile-info-value,
-[data-theme="dark"] .rb-route,
-[data-theme="dark"] .section-head h5,
-[data-theme="dark"] .rb-detail span,
-[data-theme="dark"] .empty-bookings h5,
-[data-theme="dark"] .empty-bookings p {
-color: #f8fafc !important;
+
+.profile-avatar-placeholder {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-weight: 900;
+  font-size: 1.5rem;
 }
-[data-theme="dark"] .profile-info-row {
-  border-bottom-color: #334155 !important;
+
+.profile-info-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
-[data-theme="dark"] .btn-light {
-  background: #334155 !important;
-  border-color: #475569 !important;
-  color: #f8fafc !important;
+
+.profile-info-value {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 0.95rem;
 }
-[data-theme="dark"] .btn-view-booking {
-  border-color: #334155 !important;
-  color: #94a3b8 !important;
+
+/* Dashboard stats */
+.dash-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  text-align: center;
 }
-[data-theme="dark"] .btn-view-booking:hover {
-  border-color: #2563eb !important;
-  color: #60a5fa !important;
-  background: rgba(37, 99, 235, 0.1) !important;
+
+.dash-stat-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text);
 }
-[data-theme="dark"] .dash-stat-icon.blue { background: rgba(37, 99, 235, 0.2); }
-[data-theme="dark"] .dash-stat-icon.green { background: rgba(22, 163, 74, 0.2); }
-[data-theme="dark"] .dash-stat-icon.red { background: rgba(239, 68, 68, 0.2); }
-[data-theme="dark"] .dash-stat-icon.amber { background: rgba(217, 119, 6, 0.2); }
-[data-theme="dark"] .rb-airline-logo { border-color: #334155 !important; background: #0f172a !important; }
-[data-theme="dark"] .modal-custom .modal-footer { background: #0f172a !important; }
-[data-theme="dark"] .modal-section-label::after { background: #334155 !important; }
-[data-theme="dark"] .loyalty-card {
-background: linear-gradient(135deg, #1e293b, #0f172a);
-border-color: #334155;
+
+.dash-stat-label {
+  font-size: 0.78rem;
+  color: var(--text-2);
+  font-weight: 600;
+  margin-top: 4px;
 }
-[data-theme="dark"] .loyalty-title, [data-theme="dark"] .loyalty-info span {
-color: #fcd34d !important;
+
+.recent-booking {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.5rem;
+  transition: border-color var(--duration) var(--ease);
 }
-[data-theme="dark"] .avatar-edit-btn {
-background: #1e293b;
-border-color: #2563eb;
-color: #60a5fa;
-}
+
+.recent-booking:hover { border-color: var(--border-hover); }
+
+.rb-route { font-weight: 700; color: var(--text); font-size: 0.9rem; }
+.rb-detail { color: var(--text-2); font-size: 0.78rem; }
+</style>
 {% endblock %}
 
 {% block body %}
@@ -294,7 +348,7 @@ color: #60a5fa;
 
         <div class="profile-body">
           <div class="profile-info-row">
-            <div class="profile-info-icon" style="background:#eff6ff; color:#2563eb;"><i
+            <div class="profile-info-icon" style="background:rgba(37, 99, 235, 0.1); color:var(--primary);"><i
                 class="bi bi-envelope-fill"></i></div>
             <div>
               <div class="profile-info-label">Email</div>
@@ -302,7 +356,7 @@ color: #60a5fa;
             </div>
           </div>
           <div class="profile-info-row">
-            <div class="profile-info-icon" style="background:#f0fdf4; color:#16a34a;"><i
+            <div class="profile-info-icon" style="background:rgba(22, 163, 74, 0.1); color:#10b981;"><i
                 class="bi bi-telephone-fill"></i></div>
             <div>
               <div class="profile-info-label">Phone</div>
@@ -310,7 +364,7 @@ color: #60a5fa;
             </div>
           </div>
           <div class="profile-info-row">
-            <div class="profile-info-icon" style="background:#fef2f2; color:#ef4444;"><i class="bi bi-geo-alt-fill"></i>
+            <div class="profile-info-icon" style="background:rgba(239, 68, 68, 0.1); color:var(--danger);"><i class="bi bi-geo-alt-fill"></i>
             </div>
             <div>
               <div class="profile-info-label">Address</div>
@@ -319,7 +373,7 @@ color: #60a5fa;
             </div>
           </div>
           <div class="profile-info-row">
-            <div class="profile-info-icon" style="background:#f5f3ff; color:#7c3aed;"><i class="bi bi-person-fill"></i>
+            <div class="profile-info-icon" style="background:rgba(124, 58, 237, 0.1); color:#a78bfa;"><i class="bi bi-person-fill"></i>
             </div>
             <div>
               <div class="profile-info-label">Gender</div>
@@ -335,7 +389,7 @@ color: #60a5fa;
 
       <!-- Loyalty Card -->
       <div class="loyalty-card">
-        <div class="loyalty-title"><i class="bi bi-star-fill me-2"></i>Frequent Flyer Status</div>
+        <div class="loyalty-title"><i class="bi bi-star-fill me-2" style="color:#fbbf24;"></i>Frequent Flyer Status</div>
         <div class="loyalty-progress">
           <div class="loyalty-progress-bar" style="width: 65%;"></div>
         </div>
@@ -349,7 +403,7 @@ color: #60a5fa;
     <!-- Main Content -->
     <div class="col-lg-8">
       <div class="section-head">
-        <h5><i class="bi bi-clock-history me-2" style="color:#2563eb;"></i>Recent Bookings</h5>
+        <h5><i class="bi bi-clock-history me-2" style="color:var(--primary);"></i>Recent Bookings</h5>
         {% if recent_bookings %}
         <a href="{% url 'my_bookings' %}" class="view-all-link">
           View All <i class="bi bi-arrow-right ms-1"></i>
@@ -375,11 +429,11 @@ color: #60a5fa;
           <div class="flex-grow-1">
             <div class="rb-route">
               {{ booking.flight.departure_airport.city }}
-              <i class="bi bi-arrow-right mx-1" style="color:#2563eb; font-size:0.8rem;"></i>
+              <i class="bi bi-arrow-right mx-1" style="color:var(--primary); font-size:0.8rem;"></i>
               {{ booking.flight.arrival_airport.city }}
             </div>
             <div class="rb-detail">
-              <span style="color:#0f172a; font-weight:700;">{{ booking.flight.airline.name }}</span> &bull; 
+              <span style="color:var(--text); font-weight:700;">{{ booking.flight.airline.name }}</span> &bull; 
               {{ booking.flight.airline.code }}{{ booking.flight.flight_number }} · 
               {{ booking.flight.departure_time|date:"M d, Y H:i" }}
             </div>
@@ -407,8 +461,8 @@ color: #60a5fa;
       {% else %}
       <div class="empty-bookings">
         <div class="empty-icon"><i class="bi bi-calendar-x"></i></div>
-        <h5 style="font-weight:800; color:#0f172a; margin-bottom:6px;">No Recent Bookings</h5>
-        <p style="color:#64748b; font-size:0.875rem; margin-bottom:1.5rem;">Start your journey by searching for flights
+        <h5 style="font-weight:800; color:var(--text); margin-bottom:6px;">No Recent Bookings</h5>
+        <p style="color:var(--text-3); font-size:0.875rem; margin-bottom:1.5rem;">Start your journey by searching for flights
           to your favorite destinations.</p>
         <a href="{% url 'flight_search' %}"
           style="display:inline-flex; align-items:center; gap:8px; padding:12px 28px; background:linear-gradient(135deg,#2563eb,#7c3aed); color:#fff; border-radius:12px; font-weight:700; text-decoration:none; transition:all 0.25s;">

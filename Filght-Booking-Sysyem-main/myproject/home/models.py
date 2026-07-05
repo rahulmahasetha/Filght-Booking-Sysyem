@@ -58,6 +58,40 @@ class Flight(models.Model):
         minutes = int((total_seconds % 3600) // 60)
         return timedelta(hours=hours, minutes=minutes)
     
+    def _calculate_dynamic_price(self, base_price, available_seats):
+        if not base_price:
+            return Decimal('0.00')
+        
+        price_multiplier = Decimal('1.00')
+        
+        # Seat capacity pricing
+        if available_seats <= 10:
+            price_multiplier += Decimal('0.20')
+        elif available_seats > 100:
+            price_multiplier -= Decimal('0.10')
+            
+        # Time based pricing
+        from django.utils import timezone
+        time_left = self.departure_time - timezone.now()
+        
+        # +15% last-minute surge within 48hrs of departure
+        if timedelta(0) <= time_left <= timedelta(hours=48):
+            price_multiplier += Decimal('0.15')
+            
+        return round(base_price * price_multiplier, 2)
+
+    @property
+    def current_economy_price(self):
+        return self._calculate_dynamic_price(self.economy_price, self.economy_seats)
+        
+    @property
+    def current_business_price(self):
+        return self._calculate_dynamic_price(self.business_price, self.business_seats)
+        
+    @property
+    def current_first_class_price(self):
+        return self._calculate_dynamic_price(self.first_class_price, self.first_class_seats)
+    
     def duration_display(self):
         """Formatted duration string"""
         delta = self.duration
@@ -113,11 +147,11 @@ class Booking(models.Model):
             return Decimal('0.00')
         
         if self.travel_class == 'ECONOMY':
-            return self.flight.economy_price or Decimal('0.00')
+            return self.flight.current_economy_price or Decimal('0.00')
         elif self.travel_class == 'BUSINESS':
-            return self.flight.business_price or Decimal('0.00')
+            return self.flight.current_business_price or Decimal('0.00')
         elif self.travel_class == 'FIRST':
-            return self.flight.first_class_price or Decimal('0.00')
+            return self.flight.current_first_class_price or Decimal('0.00')
         return Decimal('0.00')
 
     
