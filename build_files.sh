@@ -1,15 +1,18 @@
 #!/bin/bash
 
 # Build script for Vercel deployment
-# This runs during the Vercel build phase
-
-set -e  # Exit on any error
+set -e
 
 echo "==> Current directory: $(pwd)"
 echo "==> Python version: $(python3 --version)"
 
 echo "==> Installing Python dependencies..."
-pip install -r myproject/requirements.txt
+# Vercel uses uv-managed Python — use uv pip if available, else fall back
+if command -v uv &> /dev/null; then
+    uv pip install -r myproject/requirements.txt --system
+else
+    pip install -r myproject/requirements.txt --break-system-packages
+fi
 
 echo "==> Collecting static files..."
 cd myproject
