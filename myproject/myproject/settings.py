@@ -50,6 +50,14 @@ ALLOWED_HOSTS += [
     '.now.sh',
 ]
 
+# CSRF trusted origins for Vercel
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.vercel.app',
+    'https://*.now.sh',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+
 # ──────────────────────────────────────────────
 # STRIPE
 # ──────────────────────────────────────────────
@@ -132,7 +140,7 @@ if DATABASE_URL:
         'default': dj_database_url.config(
             default=DATABASE_URL,
             conn_max_age=0,
-            conn_health_checks=True,
+            conn_health_checks=False,
             ssl_require=True,
         )
     }

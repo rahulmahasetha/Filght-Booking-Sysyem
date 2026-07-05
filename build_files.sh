@@ -3,21 +3,23 @@
 # Build script for Vercel deployment
 # This runs during the Vercel build phase
 
+set -e  # Exit on any error
+
+echo "==> Current directory: $(pwd)"
+echo "==> Python version: $(python3 --version)"
+
 echo "==> Installing Python dependencies..."
-python -m pip install -r requirements.txt --break-system-packages
+pip install -r myproject/requirements.txt
 
 echo "==> Collecting static files..."
 cd myproject
 python manage.py collectstatic --noinput --clear
 
 echo "==> Copying media files to static distribution..."
-cp -r media staticfiles/media
+cp -r media staticfiles/media 2>/dev/null || echo "No media to copy"
 
 echo "==> Running database migrations..."
 python manage.py migrate --noinput
-
-echo "==> Seeding the database..."
-python load_db.py
 
 echo "==> Creating admin user..."
 python create_superuser.py
